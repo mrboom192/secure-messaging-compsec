@@ -2,6 +2,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import Alice from "./assets/Alice.png";
 import Bob from "./assets/Bob.png";
+import io from "socket.io-client"; //this is for real-time connection and helps connect the backend
 
 
 export default function App() {
@@ -9,17 +10,21 @@ export default function App() {
   const [bobMessages, setBob] = useState<string[]>([]);
   const [aliceInput, setAliceInput] = useState("");
   const [bobInput, setBobInput] = useState("");
+  const socket = io("http://localhost:8080"); //connects to the server
 
   const sendAlice = () => {
-    setAlice([...aliceMessages, aliceInput]);
-    setBob([...bobMessages, aliceInput]); 
-    setAliceInput("");
+    if (aliceInput.trim() !== ""){
+      socket.emit("send_message", {sender: "Alice", message: aliceInput}); // sends the message to the server
+      setAliceInput(""); //clears the input field
+    }
   };
 
   const sendBobMessage = () => {
-    setBob([...bobMessages, bobInput]);
-    setAlice([...aliceMessages, bobInput]);  // Alice receives Bob's message
-    setBobInput("");
+    if (bobInput.trim() !== ""){
+      socket.emit("send_message", {sender: "Bob", message: bobInput}); // sends the message to the server
+      setBobInput(""); //clears the input field
+    }
+   
   };
 
 
@@ -30,6 +35,19 @@ export default function App() {
 
   useEffect(() => {
     fetchAPI();
+    socket.on("receive_message", (data) => {
+      if (data.sender === "Alice") {
+        setAlice((prev) => [...prev, data.message]); //adds the message to the alice messages
+        setBob((prev) => [...prev, data.message]); //adds the message to the bob messages
+      } else if (data.sender === "Bob") {
+        setBob((prev) => [...prev, data.message]); //adds the message to the bob messages
+        setAlice((prev) => [...prev, data.message]); //adds the message to the alice messages
+      }
+    });
+    return () => {
+      socket.off("receive_message"); //cleans up the socket connection
+    };
+
   }, []);
 
   // prev color #03dffc
