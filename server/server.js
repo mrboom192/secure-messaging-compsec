@@ -25,13 +25,13 @@ const io = new Server(server, {
 
 //socket connection
 io.on("connection", (socket) =>{
-  console.log("A user connected: ${socket.id}");
+  console.log(`A user connected: ${socket.id} from ${socket.handshake.address}`);
   socket.on("send_message", (data) => {
     console.log("Message was received",data);
     io.emit("receive_message", data); //send message to everyone
   });
   socket.on("disconnect", () => {
-    console.log("User disconnected: ${socket.id}");
+    console.log(`User disconnected: ${socket.id} from ${socket.handshake.address}`);
   });
 });
 
