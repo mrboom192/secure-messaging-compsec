@@ -4,11 +4,13 @@ const cors = require("cors");
 const http = require("http"); //implemented for socket.io server
 const { Server } = require("socket.io");
 const server = http.createServer(app);
-
-const port = 8080; // Port for the server to listen on
+const { encrypt } = require("./encrypt"); //importing encrypt function from encrypt.js
+const PORT = 8080; // Port for our backend server
 
 const corsOptions = {
-  origin: ["http://localhost:5173"], // This is the port vite servers run on
+  origin: ["http://localhost:5173", "http://localhost:5174"], // This is the port vite servers run on
+  methods: ["GET", "POST"],
+  credentials: true, // This is to allow cookies to be sent
 };
 
 // Initialize app to use cors
@@ -22,7 +24,9 @@ app.get("/api", (req, res) => {
 //socket.io server
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
@@ -31,12 +35,8 @@ io.on("connection", (socket) => {
   console.log(
     `A user connected: ${socket.id} from ${socket.handshake.address}`
   );
-
-  // Listen for a message from the client
   socket.on("send_message", (data) => {
     console.log("Message was received", data);
-
-    // Send the message to all connected clients
     io.emit("receive_message", data); //send message to everyone
   });
 
@@ -47,6 +47,6 @@ io.on("connection", (socket) => {
   });
 });
 
-server.listen(port, () => {
-  console.log("Server started on port " + port);
+server.listen(8080, () => {
+  console.log("Server started on port 8080");
 });
