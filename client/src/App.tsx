@@ -94,7 +94,7 @@ return (
           <div className="flex-1 overflow-y-auto w-full mb-4">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex mb-4 ${msg.sender === "Alice" ? "justify-start" : "justify-end"}`}>
-                <div className="bg-gray-100 rounded-lg p-2 max-w-xs">
+                <div className="bg-gray-100 rounded-lg p-2 max-w-xs border border-gray-300">
                   <p className="font-bold">{msg.sender}:</p>
                   <p><strong>Plaintext:</strong> {msg.plaintext}</p>
                   <p><strong>Ciphertext:</strong> {msg.ciphertext}</p>
