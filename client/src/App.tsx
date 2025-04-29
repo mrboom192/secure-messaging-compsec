@@ -1,12 +1,13 @@
-import axios from "axios";
 import { useEffect, useState } from "react";
 import Alice from "./assets/Alice.png";
 import Bob from "./assets/Bob.png";
 import io, { Socket } from "socket.io-client"; //this is for real-time connection and helps connect the backend
 import { Message } from "./types/Message";
+import { ClientToServerEvents, ServerToClientEvents } from "./types/Socket";
 
 export default function App() {
-  const [socket, setSocket] = useState<unknown>(null); // tracks socket
+  const [socket, setSocket] =
+    useState<Socket<ServerToClientEvents, ClientToServerEvents>>(); // tracks socket
   const [messages, setMessages] = useState<Message[]>([]);
   const [aliceInput, setAliceInput] = useState("");
   const [bobInput, setBobInput] = useState("");
@@ -18,52 +19,47 @@ export default function App() {
     setSocket(newSocket);
 
     //listen for incoming messages
-    newSocket.on(
-      "receive_message",
-      (data: { sender: string; plaintext: string; ciphertext: string }) => {
-        console.log("Received message:", data);
-        setMessages((prev) => [
-          ...prev,
-          {
-            sender: data.sender,
-            plaintext: data.plaintext,
-            ciphertext: data.ciphertext,
-          },
-        ]);
-      }
-    );
+    newSocket.on("receive_message", (data: Message) => {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: data.sender,
+          plaintext: data.plaintext,
+          ciphertext: data.ciphertext,
+        },
+      ]);
+    });
 
-    //cleanup on unmount
+    // Cleanup function to close the socket connection when the component unmounts
     return () => {
       newSocket.close();
     };
   }, []);
 
-  useEffect(() => {
-    const fetchAPI = async () => {
-      const response = await axios.get("http://localhost:8080/api");
-      console.log(response.data.fruits);
-    };
-    // Call the fetchAPI function to get data from the server
-    fetchAPI();
-  }, []);
+  if (!socket) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-2xl font-bold">Connecting to server...</p>
+      </div>
+    );
+  }
 
   const sendAlice = () => {
-    if (aliceInput.trim() !== "" && socket) {
-      const plaintext = aliceInput;
-      const ciphertext = btoa(plaintext); // fake encryption for now
-      socket.emit("send_message", { sender: "Alice", plaintext, ciphertext });
-      setAliceInput("");
-    }
+    if (aliceInput.trim() === "") return;
+
+    const plaintext = aliceInput;
+    const ciphertext = btoa(plaintext); // fake encryption for now
+    socket.emit("send_message", { sender: "Alice", plaintext, ciphertext });
+    setAliceInput("");
   };
 
   const sendBobMessage = () => {
-    if (bobInput.trim() !== "" && socket) {
-      const plaintext = bobInput;
-      const ciphertext = btoa(plaintext); // fake encryption for now
-      socket.emit("send_message", { sender: "Bob", plaintext, ciphertext });
-      setBobInput("");
-    }
+    if (bobInput.trim() === "") return;
+
+    const plaintext = bobInput;
+    const ciphertext = btoa(plaintext); // fake encryption for now
+    socket.emit("send_message", { sender: "Bob", plaintext, ciphertext });
+    setBobInput("");
   };
 
   return (

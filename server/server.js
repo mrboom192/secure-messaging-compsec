@@ -2,8 +2,10 @@ const express = require("express"); // We're using express as our backend framew
 const app = express(); // Initialize our app instance
 const cors = require("cors");
 const http = require("http"); //implemented for socket.io server
-const {Server} = require("socket.io");
+const { Server } = require("socket.io");
 const server = http.createServer(app);
+
+const port = 8080; // Port for the server to listen on
 
 const corsOptions = {
   origin: ["http://localhost:5173"], // This is the port vite servers run on
@@ -12,11 +14,12 @@ const corsOptions = {
 // Initialize app to use cors
 app.use(cors(corsOptions));
 
+// Example route
 app.get("/api", (req, res) => {
   res.json({ fruits: ["apple", "orange", "banana"] });
 });
 
-//socet.io server
+//socket.io server
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:5173",
@@ -24,19 +27,26 @@ const io = new Server(server, {
 });
 
 //socket connection
-io.on("connection", (socket) =>{
-  console.log(`A user connected: ${socket.id} from ${socket.handshake.address}`);
+io.on("connection", (socket) => {
+  console.log(
+    `A user connected: ${socket.id} from ${socket.handshake.address}`
+  );
+
+  // Listen for a message from the client
   socket.on("send_message", (data) => {
-    console.log("Message was received",data);
+    console.log("Message was received", data);
+
+    // Send the message to all connected clients
     io.emit("receive_message", data); //send message to everyone
   });
+
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id} from ${socket.handshake.address}`);
+    console.log(
+      `User disconnected: ${socket.id} from ${socket.handshake.address}`
+    );
   });
 });
 
-
-
-server.listen(8080, () => {
-  console.log("Server started on port 8080");
+server.listen(port, () => {
+  console.log("Server started on port " + port);
 });
