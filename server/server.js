@@ -4,6 +4,7 @@ const cors = require("cors");
 const http = require("http"); //implemented for socket.io server
 const {Server} = require("socket.io");
 const server = http.createServer(app);
+const { encrypt } = require("./encrypt"); //importing encrypt function from encrypt.js
 
 const corsOptions = {
   origin: ["http://localhost:5173"], // This is the port vite servers run on
@@ -27,7 +28,9 @@ const io = new Server(server, {
 io.on("connection", (socket) =>{
   console.log(`A user connected: ${socket.id} from ${socket.handshake.address}`);
   socket.on("send_message", (data) => {
-    console.log("Message was received",data);
+    const { sender, plaintext } = data;
+    const { ciphertext, iv } = encrypt(plaintext);
+    console.log("Encrypted message",data);
     io.emit("receive_message", data); //send message to everyone
   });
   socket.on("disconnect", () => {
