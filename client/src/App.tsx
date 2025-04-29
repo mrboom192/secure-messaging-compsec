@@ -4,64 +4,7 @@ import Bob from "./assets/Bob.png";
 import io, { Socket } from "socket.io-client"; //this is for real-time connection and helps connect the backend
 import { Message } from "./types/Message";
 import { ClientToServerEvents, ServerToClientEvents } from "./types/Socket";
-
-// AES + PBKDF2 decryption helpers
-async function deriveKey(
-  password: string,
-  saltBase64: string
-): Promise<CryptoKey> {
-  const encoder = new TextEncoder();
-  const salt = Uint8Array.from(atob(saltBase64), (c) => c.charCodeAt(0));
-
-  const keyMaterial = await window.crypto.subtle.importKey(
-    "raw",
-    encoder.encode(password),
-    { name: "PBKDF2" },
-    false,
-    ["deriveKey"]
-  );
-
-  return window.crypto.subtle.deriveKey(
-    {
-      name: "PBKDF2",
-      salt,
-      iterations: 100000,
-      hash: "SHA-256",
-    },
-    keyMaterial,
-    {
-      name: "AES-CBC",
-      length: 256,
-    },
-    false,
-    ["decrypt"]
-  );
-}
-
-async function decryptMessage(
-  ciphertextBase64: string,
-  ivBase64: string,
-  saltBase64: string,
-  password: string
-): Promise<string> {
-  const iv = Uint8Array.from(atob(ivBase64), (c) => c.charCodeAt(0));
-  const ciphertext = Uint8Array.from(atob(ciphertextBase64), (c) =>
-    c.charCodeAt(0)
-  );
-
-  const key = await deriveKey(password, saltBase64);
-
-  const plaintextBuffer = await window.crypto.subtle.decrypt(
-    {
-      name: "AES-CBC",
-      iv,
-    },
-    key,
-    ciphertext
-  );
-
-  return new TextDecoder().decode(plaintextBuffer);
-}
+import { decryptMessage } from "./utils/cryptoHelpers";
 
 export default function App() {
   const [socket, setSocket] =
@@ -77,15 +20,22 @@ export default function App() {
     setSocket(newSocket);
 
     //listen for incoming messages
-    newSocket.on("receive_message", async (data: any) => {
-      console.log("Received encrypted message:", data);
-
-      const { sender, ciphertext, iv, salt } = data;
+    newSocket.on("receive_message", async (data: Message) => {
       const password = "shared-secret"; // must match the server-side password
+      const iv = data.ciphertext.slice(0, 16); // first 16 bytes of ciphertext
+      const salt = data.ciphertext.slice(16, 32); // next 16 bytes of ciphertext
 
       try {
-        const plaintext = await decryptMessage(ciphertext, iv, salt, password);
-        setMessages((prev) => [...prev, { sender, plaintext, ciphertext }]);
+        const plaintext = await decryptMessage(
+          data.ciphertext,
+          iv,
+          salt,
+          password
+        );
+        setMessages((prev) => [
+          ...prev,
+          { sender: data.sender, plaintext, ciphertext: data.ciphertext },
+        ]);
       } catch (err) {
         console.error("Decryption failed:", err);
       }
@@ -110,6 +60,7 @@ export default function App() {
 
     const plaintext = aliceInput;
     const ciphertext = btoa(plaintext); // fake encryption for now
+    console.log("Alice's message:", { plaintext, ciphertext });
     socket.emit("send_message", { sender: "Alice", plaintext, ciphertext });
     setAliceInput("");
   };
@@ -142,7 +93,7 @@ export default function App() {
           </div>
 
           {/*Chatbox */}
-          <div className="w-1/3 flex flex-col bg-white w-full h-[650px] rounded-lg shadow-lg p-4 overflow-y-auto ml-auto">
+          <div className="w-1/3 flex flex-col bg-white h-[650px] rounded-lg shadow-lg p-4 overflow-y-auto ml-auto">
             <div className="flex-1 overflow-y-auto w-full mb-4">
               {messages.map((msg, idx) => (
                 <div
