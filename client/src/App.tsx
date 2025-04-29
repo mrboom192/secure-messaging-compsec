@@ -4,6 +4,53 @@ import Alice from "./assets/Alice.png";
 import Bob from "./assets/Bob.png";
 import io from "socket.io-client"; //this is for real-time connection and helps connect the backend
 
+// AES + PBKDF2 decryption helpers
+async function deriveKey(password: string, saltBase64: string): Promise<CryptoKey> {
+  const encoder = new TextEncoder();
+  const salt = Uint8Array.from(atob(saltBase64), c => c.charCodeAt(0));
+
+  const keyMaterial = await window.crypto.subtle.importKey(
+    "raw",
+    encoder.encode(password),
+    { name: "PBKDF2" },
+    false,
+    ["deriveKey"]
+  );
+
+  return window.crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt,
+      iterations: 100000,
+      hash: "SHA-256"
+    },
+    keyMaterial,
+    {
+      name: "AES-CBC",
+      length: 256
+    },
+    false,
+    ["decrypt"]
+  );
+}
+
+async function decryptMessage(ciphertextBase64: string, ivBase64: string, saltBase64: string, password: string): Promise<string> {
+  const iv = Uint8Array.from(atob(ivBase64), c => c.charCodeAt(0));
+  const ciphertext = Uint8Array.from(atob(ciphertextBase64), c => c.charCodeAt(0));
+
+  const key = await deriveKey(password, saltBase64);
+
+  const plaintextBuffer = await window.crypto.subtle.decrypt(
+    {
+      name: "AES-CBC",
+      iv
+    },
+    key,
+    ciphertext
+  );
+
+  return new TextDecoder().decode(plaintextBuffer);
+}
 
 
 export default function App() {
@@ -18,9 +65,18 @@ export default function App() {
     setSocket(newSocket);
 
     //listen for incoming messages
-    newSocket.on("receive_message", (data: any) => {
-      console.log("Received message:", data);
-      setMessages((prev) => [...prev, { sender: data.sender, plaintext: data.plaintext, ciphertext: data.ciphertext }]);
+    newSocket.on("receive_message", async (data: any) => {
+      console.log("Received encrypted message:", data);
+    
+      const { sender, ciphertext, iv, salt } = data;
+      const password = "shared-secret"; // must match the server-side password
+    
+      try {
+        const plaintext = await decryptMessage(ciphertext, iv, salt, password);
+        setMessages((prev) => [...prev, { sender, plaintext, ciphertext }]);
+      } catch (err) {
+        console.error("Decryption failed:", err);
+      }
     });
     
 
@@ -50,8 +106,8 @@ export default function App() {
   const sendAlice = () => {
     if (aliceInput.trim() !== "" && socket) {
       const plaintext = aliceInput;
-      const ciphertext = btoa(plaintext); // fake encryption for now
-      socket.emit("send_message", { sender: "Alice", plaintext, ciphertext });
+      console.log("📤 Sending plaintext to server:", plaintext);
+      socket.emit("send_message", { sender: "Alice", plaintext }); // Just plaintext!
       setAliceInput("");
     }
   };
@@ -67,11 +123,11 @@ export default function App() {
 
 
  const sendBobMessage = () => {
-    if (bobInput.trim() !== "" && socket) {
-      const plaintext = bobInput;
-      const ciphertext = btoa(plaintext); // fake encryption for now
-      socket.emit("send_message", { sender: "Bob", plaintext, ciphertext });
-      setBobInput("");
+  if (bobInput.trim() !== "" && socket) {
+    const plaintext = bobInput;
+    console.log("📤 Sending plaintext to server:", plaintext);
+    socket.emit("send_message", { sender: "Bob", plaintext }); // Just plaintext!
+    setBobInput("");
     }
   };
 

@@ -5,9 +5,12 @@ const http = require("http"); //implemented for socket.io server
 const {Server} = require("socket.io");
 const server = http.createServer(app);
 const { encrypt } = require("./encrypt"); //importing encrypt function from encrypt.js
+const PORT = 8080; // Port for our backend server
 
 const corsOptions = {
-  origin: ["http://localhost:5173"], // This is the port vite servers run on
+  origin: ["http://localhost:5173", "http://localhost:5174"], // This is the port vite servers run on
+  methods: ["GET", "POST"],
+  credentials: true, // This is to allow cookies to be sent
 };
 
 // Initialize app to use cors
@@ -20,25 +23,34 @@ app.get("/api", (req, res) => {
 //socet.io server
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    methods: ["GET", "POST"],
+    credentials: true,
   },
 });
 
 //socket connection
-io.on("connection", (socket) =>{
-  console.log(`A user connected: ${socket.id} from ${socket.handshake.address}`);
+io.on("connection", (socket) => {
+  console.log(`A user connected: ${socket.id}`);
+
   socket.on("send_message", (data) => {
     const { sender, plaintext } = data;
-    const { ciphertext, iv } = encrypt(plaintext);
-    console.log("Encrypted message",data);
-    io.emit("receive_message", data); //send message to everyone
+    const { ciphertext, iv, salt } = encrypt(plaintext);
+
+    console.log("🔐 Encrypted message:", { sender, plaintext, ciphertext, iv, salt });
+
+    io.emit("receive_message", {
+      sender,
+      ciphertext,
+      iv,
+      salt
+    });
   });
+
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id} from ${socket.handshake.address}`);
+    console.log(`User disconnected: ${socket.id}`);
   });
 });
-
-
 
 server.listen(8080, () => {
   console.log("Server started on port 8080");

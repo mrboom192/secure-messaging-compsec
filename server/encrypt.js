@@ -1,25 +1,37 @@
 const crypto = require("crypto");
+//shared passphrase
+const password = 'shared-secret';
 
-const key = crypto.randomBytes(32); // AES-256 = 32 bytes
-const algorithm = "aes-256-cbc";
+// Generate a random key from the passphrase
+function deriveKey(salt) {
+  return crypto.pbkdf2Sync(password, salt, 100000, 32, "sha256");
+}
 
+//encyprtion algorithm using AES-256-CBC
 function encrypt(plaintext) {
-  const iv = crypto.randomBytes(16); // CBC mode needs 16-byte IV
-  const cipher = crypto.createCipheriv(algorithm, key, iv);
-  let encrypted = cipher.update(plaintext, "utf8", "base64");
-  encrypted += cipher.final("base64");
+  const salt = crypto.randomBytes(16);
+  const iv = crypto.randomBytes(16);
+  const key = deriveKey(salt);
+  const cipher = crypto.createCipheriv("aes-256-cbc", key, iv);
+  let ciphertext = cipher.update(plaintext, "utf8", "base64");
+  ciphertext += cipher.final("base64");
+
   return {
-    ciphertext: encrypted,
+    ciphertext,
     iv: iv.toString("base64"),
+    salt: salt.toString("base64"),
   };
 }
 
-function decrypt(ciphertext, ivBase64) {
-  const iv = Buffer.from(ivBase64, "base64");
-  const decipher = crypto.createDecipheriv(algorithm, key, iv);
-  let decrypted = decipher.update(ciphertext, "base64", "utf8");
-  decrypted += decipher.final("utf8");
-  return decrypted;
+// Decryption algorithm using AES-256-CBC
+function decrypt(ciphertext, ivBase64, saltBase64) {
+    const iv = Buffer.from(ivBase64, "base64");
+    const salt = Buffer.from(saltBase64, "base64");
+    const key = deriveKey(salt);
+    const decipher = crypto.createDecipheriv("aes-256-cbc", key, iv);
+    let plaintext = decipher.update(ciphertext, "base64", "utf8");
+    plaintext += decipher.final("utf8");
+    return plaintext;
 }
 
 module.exports = { encrypt, decrypt };
