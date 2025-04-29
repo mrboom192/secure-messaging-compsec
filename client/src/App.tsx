@@ -90,7 +90,6 @@ return (
 
           {/*Chatbox */}
           <div className="w-1/3 flex flex-col bg-white w-full h-[650px] rounded-lg shadow-lg p-4 overflow-y-auto ml-auto">
-
           <div className="flex-1 overflow-y-auto w-full mb-4">
             {messages.map((msg, idx) => (
               <div key={idx} className={`flex mb-4 ${msg.sender === "Alice" ? "justify-start" : "justify-end"}`}>
@@ -103,29 +102,37 @@ return (
             ))}
           </div>
           </div>
+            
+            {/* Bob */}
+          <div className="w-1/3 flex flex-col items-center">
+            <img src={Bob} alt="Bob" className="w-24 h-24 mb-2 shadow-lg rounded-full" />
+            <h2 className="font-bold text-2xl">Bob</h2>
 
+
+          </div>
+        </div>
         
+            
 
-          {/*Input for Alice */}
-          <div className="w-1/3 flex flex-col justify-center">
-            <div className="flex w-full ">
-              <input 
-                type="text"
-                className="flex-1 p-2 rounded-l-lg border border-black bg-white"
-                placeholder="Type a message as Alice"
-                onChange={(e) => setAliceInput(e.target.value)}
-                value={aliceInput}
-              />
-              <button
-                onClick={sendAlice}
-                className="bg-blue-500 text-black p-2 rounded-r-lg border border-black hover:bg-blue-600 transition duration-300"
-              >
-                Send
-              </button>
-            </div>
-
+        <div className="flex justify-between gap-4 mt-4 px-[20%]">
+        {/* Alice Input */}
+        <div className="flex flex-1 max-w-[50%]">
+          <input 
+            type="text"
+            className="flex-1 p-2 rounded-l-lg border border-black bg-white"
+            placeholder="Type a message as Alice"
+            onChange={(e) => setAliceInput(e.target.value)}
+            value={aliceInput}
+          />
+          <button
+            onClick={sendAlice}
+            className="bg-blue-500 text-black p-2 rounded-r-lg border border-black hover:bg-blue-600 transition duration-300"
+          >
+            Send
+          </button>
+        </div>
             {/*Input for Bob */}
-            <div className="flex w-full">
+            <div className="flex flex-1 max-w-[50%]">
               <input 
                 type="text"
                 className="flex-1 p-2 rounded-l-lg border border-black bg-white"
@@ -140,19 +147,14 @@ return (
                 Send
               </button>
             </div>
-          </div>
+
+
+      
         
 
-          
+            </div>
 
-          {/* Bob */}
-          <div className="w-1/3 flex flex-col items-center">
-            <img src={Bob} alt="Bob" className="w-24 h-24 mb-2 shadow-lg rounded-full" />
-            <h2 className="font-bold text-2xl">Bob</h2>
-
-
-          </div>
-        </div>
+        
         
       </div>
     </div>
