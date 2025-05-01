@@ -1,8 +1,8 @@
-import { useState, ReactNode } from "react";
+import { useState, useEffect } from "react";
 import ActionInput from "./ActionInput";
 import Button from "./Button";
-import Modal from "./Modal";
 import { createPeerConnection } from "../utils/createPeerConnection";
+import { Dialog, DialogPanel } from "@headlessui/react";
 
 const iceServers: RTCIceServer[] = [
   {
@@ -10,159 +10,27 @@ const iceServers: RTCIceServer[] = [
   },
 ];
 
-const Startup = () => {
+function Startup() {
   const [name, setName] = useState("");
   const [hasSubmittedName, setHasSubmittedName] = useState(false);
-  const [modalContent, setModalContent] = useState<ReactNode>(null);
-  const [sdpOffer, setSdpOffer] = useState<string | null>(null);
-  const [sdpAnswer, setSdpAnswer] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [remoteDescription, setRemoteDescription] = useState<
-    string | undefined
-  >(null);
-  const [sdpInput, setSdpInput] = useState("");
-  const [offerInput, setOfferInput] = useState(""); // for pasted offer SDP
+  const [isOpen, setIsOpen] = useState(false);
+  const [role, setRole] = useState<string>("");
 
   const handleSetName = (value: string) => {
     setName(value);
     setHasSubmittedName(true);
   };
 
-  const closeModal = () => setModalContent(null);
-
-  const renderSdpModalContentHost = (sdp: string | undefined) => (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex flex-col w-full items-start gap-1">
-        <p className="text-sm text-left break-all max-w-md">
-          {"1) Send offer to peer"}
-        </p>
-        <textarea
-          readOnly
-          className="w-full max-w-md h-48 p-2 focus:outline-none border-black border-b-2 border-r-2 resize-none text-xs bg-white"
-          value={sdp || ""}
-        />
-      </div>
-
-      <div className="flex flex-col w-full items-start gap-1">
-        <p className="text-sm text-left break-all max-w-md">
-          {"2) Paste answer from peer"}
-        </p>
-        <ActionInput
-          value={name}
-          onTextChange={setName}
-          onAction={handleSetName}
-          buttonText="Set Answer"
-          placeholder="Enter your name"
-          buttonColor="bg-fuchsia-400 hover:bg-fuchsia-500"
-          disableButton={!name}
-        />
-      </div>
-      <p>Awaiting connection...</p>
-      <Button
-        onClick={closeModal}
-        buttonText="Close"
-        buttonColor="bg-rose-400 hover:bg-rose-500"
-      />
-    </div>
-  );
-
-  const renderSdpModalContentJoin = () => (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex flex-col w-full items-start gap-1">
-        <p className="text-sm text-left break-all max-w-md">
-          1) Paste offer from peer
-        </p>
-        <ActionInput
-          value={offerInput}
-          onTextChange={setOfferInput}
-          onAction={handleSetRemoteDescription}
-          buttonText="Connect"
-          placeholder="Paste offer SDP here"
-          buttonColor="bg-fuchsia-400 hover:bg-fuchsia-500"
-          disableButton={!offerInput}
-        />
-      </div>
-
-      <Button
-        onClick={closeModal}
-        buttonText="Close"
-        buttonColor="bg-rose-400 hover:bg-rose-500"
-      />
-    </div>
-  );
-
-  const openHostModal = async () => {
-    setIsLoading(true);
-    setModalContent(<p>Setting up connection...</p>);
-
-    try {
-      const onChannelOpen = () => console.log(`Connection ready!`);
-      const onMessageReceived = (message: string) =>
-        console.log(`Incoming: ${message}`);
-
-      const { localDescription, setAnswerDescription, sendMessage } =
-        await createPeerConnection({
-          iceServers,
-          onMessageReceived,
-          onChannelOpen,
-        });
-
-      setSdpOffer(localDescription || "No SDP available");
-
-      // You can store or use setAnswerDescription/sendMessage as needed
-      setModalContent(renderSdpModalContentHost(localDescription));
-    } catch (err) {
-      setModalContent(<p>Error setting up connection: {String(err)}</p>);
-    } finally {
-      setIsLoading(false);
-    }
+  const openModal = (role: string) => {
+    setRole(role);
+    setIsOpen(true);
   };
 
-  const openJoinModal = () => {
-    setModalContent(renderSdpModalContentJoin());
+  const closeModal = () => {
+    setIsOpen(false);
+    setRole("");
   };
 
-  const handleSetRemoteDescription = async () => {
-    setIsLoading(true);
-    setModalContent(<p>Connecting...</p>);
-
-    try {
-      const onChannelOpen = () => console.log(`Connection ready!`);
-      const onMessageReceived = (message: string) =>
-        console.log(`Incoming: ${message}`);
-
-      const remoteSDP = JSON.parse(sdpInput);
-      const { localDescription, sendMessage } = await createPeerConnection({
-        remoteDescription: JSON.stringify(new RTCSessionDescription(remoteSDP)),
-        iceServers,
-        onMessageReceived,
-        onChannelOpen,
-      });
-
-      setSdpAnswer(localDescription || "Error");
-      setModalContent(
-        <div className="flex flex-col items-center gap-4">
-          <p className="text-sm text-left break-all max-w-md">
-            Send answer back to peer:
-          </p>
-          <textarea
-            readOnly
-            className="w-full max-w-md h-48 p-2 focus:outline-none border-black border-b-2 border-r-2 resize-none text-xs bg-white"
-            value={localDescription || ""}
-          />
-          <Button
-            onClick={closeModal}
-            buttonText="Close"
-            buttonColor="bg-rose-400 hover:bg-rose-500"
-          />
-        </div>
-      );
-    } catch (err) {
-      setModalContent(<p>Error connecting: {String(err)}</p>);
-    } finally {
-      setIsLoading(false);
-    }
-  };
   return (
     <div className="flex flex-col items-center justify-center w-full h-screen bg-background font-sans">
       <h1 className="text-3xl text-black mb-12">
@@ -183,23 +51,171 @@ const Startup = () => {
         <div className="flex flex-row items-center justify-center gap-4 mt-4">
           <Button
             buttonText="Host chat"
-            onClick={openHostModal}
+            onClick={() => openModal("host")}
             buttonColor="bg-emerald-400 hover:bg-emerald-500"
           />
           <p>Or</p>
           <Button
             buttonText="Join chat"
-            onClick={openJoinModal}
+            onClick={() => openModal("guest")}
             buttonColor="bg-purple-400 hover:bg-purple-500"
           />
         </div>
       )}
 
-      <Modal isOpen={modalContent !== null} onClose={closeModal}>
-        {modalContent}
-      </Modal>
+      <Dialog
+        open={isOpen}
+        onClose={() => setIsOpen(false)}
+        className="relative z-50"
+      >
+        <div className="fixed inset-0 flex w-screen bg-black/50 items-center justify-center p-4">
+          <DialogPanel className="max-w-lg space-y-4 bg-background p-12">
+            <DialogContent role={role} closeModal={closeModal} />
+          </DialogPanel>
+        </div>
+      </Dialog>
+    </div>
+  );
+}
+
+export default Startup;
+
+const DialogContent = ({
+  role,
+  closeModal,
+}: {
+  role: string;
+  closeModal: () => void;
+}) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string>("");
+  const [offer, setOffer] = useState<string>("");
+  const [answer, setAnswer] = useState<string>("");
+
+  const onChannelOpen = () => {
+    console.log("Connection ready!");
+  };
+
+  const onMessageReceived = (message: string) => {
+    console.log(`Incoming: ${message}`);
+  };
+
+  useEffect(() => {
+    const openChannelAsHost = async () => {
+      setIsLoading(true);
+      try {
+        const { localDescription } = await createPeerConnection({
+          iceServers,
+          onMessageReceived,
+          onChannelOpen,
+        });
+
+        setOffer(localDescription || "No SDP available");
+      } catch (err) {
+        setError(`Error setting up connection: ${String(err)}`);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (role === "host") {
+      openChannelAsHost();
+    }
+  }, [role]);
+
+  const handleSetRemoteDescription = async () => {
+    setIsLoading(true);
+
+    try {
+      const remoteSDP = JSON.parse(role === "host" ? answer : offer);
+
+      const { localDescription } = await createPeerConnection({
+        remoteDescription: JSON.stringify(new RTCSessionDescription(remoteSDP)),
+        iceServers,
+        onMessageReceived,
+        onChannelOpen,
+      });
+
+      if (role === "host") {
+        // No localDescription needed from host here
+      } else {
+        setAnswer(localDescription || "Error generating answer");
+      }
+    } catch (err) {
+      setError(`Error setting up connection: ${String(err)}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <p className="text-red-500">{error}</p>
+        <Button
+          onClick={closeModal}
+          buttonText="Close"
+          buttonColor="bg-rose-400 hover:bg-rose-500"
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-4 w-full">
+      {role === "host" ? (
+        <>
+          <p className="text-sm">1) Send offer to peer:</p>
+          <textarea
+            readOnly
+            className="w-full max-w-md h-48 p-2 border-black border resize-none text-xs bg-white"
+            value={offer || ""}
+          />
+          <p className="text-sm">2) Paste answer from peer:</p>
+          <ActionInput
+            value={answer}
+            onTextChange={setAnswer}
+            onAction={handleSetRemoteDescription}
+            buttonText="Connect"
+            placeholder="Paste peer SDP answer"
+            buttonColor="bg-fuchsia-400 hover:bg-fuchsia-500"
+            disableButton={!answer}
+          />
+        </>
+      ) : (
+        <>
+          <p className="text-sm">1) Paste offer from peer:</p>
+          <ActionInput
+            value={offer}
+            onTextChange={setOffer}
+            onAction={handleSetRemoteDescription}
+            buttonText="Generate Answer"
+            placeholder="Paste peer SDP offer"
+            buttonColor="bg-fuchsia-400 hover:bg-fuchsia-500"
+            disableButton={!offer}
+          />
+          <p className="text-sm">2) Send this answer to the host:</p>
+          <textarea
+            readOnly
+            className="w-full max-w-md h-48 p-2 border-black border resize-none text-xs bg-white"
+            value={answer || ""}
+          />
+        </>
+      )}
+
+      <Button
+        onClick={closeModal}
+        buttonText="Close"
+        buttonColor="bg-rose-400 hover:bg-rose-500"
+      />
     </div>
   );
 };
-
-export default Startup;
