@@ -8,18 +8,19 @@ import ActionInput from "./ActionInput";
 import { useChat } from "../hooks/useChat";
 import { useState } from "react";
 
-const ConnectionDialog = ({ role }: { role: PEER_CONNECTION_MODE | null }) => {
+const ConnectionDialog = () => {
   const { closeConnectionAttempt } = usePeerConnection();
+  const { mode, isConnected } = useChat();
 
   return (
     <Dialog
-      open={!!role}
+      open={!!mode && !isConnected}
       onClose={closeConnectionAttempt}
       className="relative z-50"
     >
       <div className="fixed inset-0 flex w-screen bg-black/50 items-center justify-center p-4">
         <DialogPanel className="max-w-lg space-y-4 bg-background p-12">
-          {role === PEER_CONNECTION_MODE.HOST ? (
+          {mode === PEER_CONNECTION_MODE.HOST ? (
             <DialogContentHost />
           ) : (
             <DialogContentParticipant />

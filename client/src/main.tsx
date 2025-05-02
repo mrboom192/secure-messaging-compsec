@@ -7,10 +7,10 @@ import { ChatMessagesProvider } from "./contexts/ChatContext.tsx";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <PeerConnectionProvider>
-      <ChatMessagesProvider>
+    <ChatMessagesProvider>
+      <PeerConnectionProvider>
         <App />
-      </ChatMessagesProvider>
-    </PeerConnectionProvider>
+      </PeerConnectionProvider>
+    </ChatMessagesProvider>
   </StrictMode>
 );

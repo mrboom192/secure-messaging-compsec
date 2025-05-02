@@ -10,7 +10,7 @@ import { Message } from "../types/Message";
 // Define context value shape
 type ChatMessagesContextValue = {
   chatMessages: Message[];
-  sendChatMessage: (message: Message) => void;
+  updateChatMessages: (message: Message) => void;
 };
 
 // Create context
@@ -22,12 +22,12 @@ const ChatMessagesContext = createContext<ChatMessagesContextValue | undefined>(
 export const ChatMessagesProvider = ({ children }: { children: ReactNode }) => {
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
 
-  const sendChatMessage = useCallback((message: Message) => {
+  const updateChatMessages = useCallback((message: Message) => {
     setChatMessages((prev) => [...prev, message]);
   }, []);
 
   return (
-    <ChatMessagesContext.Provider value={{ chatMessages, sendChatMessage }}>
+    <ChatMessagesContext.Provider value={{ chatMessages, updateChatMessages }}>
       {children}
     </ChatMessagesContext.Provider>
   );

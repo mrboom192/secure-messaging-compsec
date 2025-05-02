@@ -2,11 +2,12 @@ import { useState } from "react";
 import ActionInput from "./ActionInput";
 import Button from "./Button";
 import { useChat } from "../hooks/useChat";
+import { usePeerConnection } from "../contexts/PeerConnectionContext";
 
 function Startup() {
   const { startAsHost, startAsParticipant } = useChat();
+  const { currentUserName, setName } = usePeerConnection();
   const [offer, setOffer] = useState<string>("");
-  const [name, setName] = useState("");
   const [hasSubmittedName, setHasSubmittedName] = useState(false);
 
   const handleSetName = (value: string) => {
@@ -37,13 +38,13 @@ function Startup() {
       </h1>
 
       <ActionInput
-        value={name}
+        value={currentUserName}
         onTextChange={setName}
         onAction={handleSetName}
         buttonText="Set Name"
         placeholder="Enter your name"
         buttonColor="bg-blue-400 hover:bg-blue-500"
-        disableButton={!name}
+        disableButton={!currentUserName}
       />
 
       {hasSubmittedName && (

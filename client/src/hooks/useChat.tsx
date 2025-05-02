@@ -6,7 +6,8 @@ import { useChatMessages } from "../contexts/ChatContext";
 import { nanoid } from "nanoid";
 
 export const useChat = () => {
-  const { chatMessages, sendChatMessage } = useChatMessages();
+  const { chatMessages, updateChatMessages } = useChatMessages();
+  const { currentUserName } = usePeerConnection();
 
   const {
     mode,
@@ -19,18 +20,23 @@ export const useChat = () => {
   } = usePeerConnection();
 
   const sendTextChatMessage = useCallback(
-    (messageText: string, senderName: string) => {
+    (messageText: string) => {
       // Create a new message object
       const message: Message = {
         id: nanoid(),
-        sender: senderName,
+        sender: currentUserName,
         plaintext: messageText,
         ciphertext: "", // Fill in later
         timestamp: +new Date(),
       };
 
+      // TODO: Encrypt the message before sending (create ciphertext)
+
+      // Send the message over the peer connection
       sendMessage(message);
-      sendChatMessage({
+
+      // Update local chat messages
+      updateChatMessages({
         id: message.id,
         sender: message.sender,
         plaintext: message.plaintext,
@@ -38,7 +44,7 @@ export const useChat = () => {
         timestamp: message.timestamp,
       });
     },
-    [sendMessage, sendChatMessage]
+    [sendMessage, updateChatMessages]
   );
 
   return {

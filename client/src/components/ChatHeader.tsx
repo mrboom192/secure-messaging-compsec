@@ -1,7 +1,11 @@
-const ChatHeader = ({ user = "Bob" }: { user: string }) => {
+import { usePeerConnection } from "../contexts/PeerConnectionContext";
+
+const ChatHeader = () => {
+  const { currentUserName } = usePeerConnection();
+
   return (
     <div className="flex items-center justify-between">
-      <span className="font-bold text-2xl text-white">{user}</span>
+      <span className="font-bold text-2xl text-white">{currentUserName}</span>
       <div className="flex-row">
         <input
           type="text"
