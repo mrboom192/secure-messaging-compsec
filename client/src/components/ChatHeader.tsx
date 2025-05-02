@@ -4,7 +4,16 @@ import ActionInput from "./ActionInput";
 
 const ChatHeader = () => {
   const { currentUserName } = usePeerConnection();
-  const { password, setPassword } = useCrypto();
+  const { password, setPassword, deriveNewKey } = useCrypto();
+
+  const handleSetPassword = async () => {
+    if (!password) return;
+    try {
+      await deriveNewKey(password);
+    } catch (error) {
+      console.error("Error deriving key:", error);
+    }
+  };
 
   return (
     <div className="flex items-center justify-between">
@@ -15,11 +24,11 @@ const ChatHeader = () => {
         <ActionInput
           value={password}
           onTextChange={(value) => setPassword(value)}
-          onAction={handleParticipantSubmit}
+          onAction={handleSetPassword}
           buttonText="Set Offer"
           placeholder="Enter offer here"
           buttonColor="bg-fuchsia-400 hover:bg-fuchsia-500"
-          disableButton={!offer}
+          disableButton={!password}
         />
         <input
           type="text"
