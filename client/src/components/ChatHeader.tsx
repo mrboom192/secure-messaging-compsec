@@ -1,7 +1,10 @@
+import { useCrypto } from "../contexts/CryptoContext";
 import { usePeerConnection } from "../contexts/PeerConnectionContext";
+import ActionInput from "./ActionInput";
 
 const ChatHeader = () => {
   const { currentUserName } = usePeerConnection();
+  const { password, setPassword } = useCrypto();
 
   return (
     <div className="flex items-center justify-between">
@@ -9,6 +12,15 @@ const ChatHeader = () => {
         You are chatting as: {currentUserName}
       </span>
       <div className="flex-row">
+        <ActionInput
+          value={password}
+          onTextChange={(value) => setPassword(value)}
+          onAction={handleParticipantSubmit}
+          buttonText="Set Offer"
+          placeholder="Enter offer here"
+          buttonColor="bg-fuchsia-400 hover:bg-fuchsia-500"
+          disableButton={!offer}
+        />
         <input
           type="text"
           placeholder="Enter shared password"
