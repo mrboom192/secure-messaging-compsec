@@ -21,6 +21,8 @@ export const useChat = () => {
 
   const sendTextChatMessage = useCallback(
     (messageText: string) => {
+      // TODO: Encrypt the message before sending (create ciphertext)
+
       // Create a new message object
       const message: Message = {
         id: nanoid(),
@@ -29,8 +31,6 @@ export const useChat = () => {
         ciphertext: "", // Fill in later
         timestamp: +new Date(),
       };
-
-      // TODO: Encrypt the message before sending (create ciphertext)
 
       // Send the message over the peer connection
       sendMessage(message);
@@ -44,7 +44,7 @@ export const useChat = () => {
         timestamp: message.timestamp,
       });
     },
-    [sendMessage, updateChatMessages]
+    [currentUserName, sendMessage, updateChatMessages]
   );
 
   return {
