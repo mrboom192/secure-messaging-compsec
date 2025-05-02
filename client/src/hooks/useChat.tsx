@@ -13,7 +13,7 @@ export const useChat = () => {
     isConnected,
     localConnectionDescription,
     startAsHost,
-    startAsSlave,
+    startAsParticipant,
     setRemoteConnectionDescription,
     sendMessage,
   } = usePeerConnection();
@@ -47,7 +47,7 @@ export const useChat = () => {
     localConnectionDescription,
     chatMessages,
     startAsHost,
-    startAsSlave,
+    startAsParticipant,
     setRemoteConnectionDescription,
     sendTextChatMessage,
   };

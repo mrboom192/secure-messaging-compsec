@@ -6,15 +6,11 @@ import React, {
   useRef,
   useCallback,
   useContext,
-  useMemo,
 } from "react";
-export type ConnectionDescription = {
-  description: string;
-};
 
 export enum PEER_CONNECTION_MODE {
   HOST = "HOST",
-  SLAVE = "SLAVE",
+  PARTICIPANT = "PARTICIPANT",
 }
 
 const iceServers: RTCIceServer[] = [
@@ -26,13 +22,11 @@ const iceServers: RTCIceServer[] = [
 interface PeerConnectionContextValue {
   mode: PEER_CONNECTION_MODE | undefined;
   isConnected: boolean;
-  localConnectionDescription: ConnectionDescription | undefined;
+  localConnectionDescription: string | undefined;
   startAsHost: () => void;
   closeConnectionAttempt: () => void;
-  startAsSlave: (connectionDescription: ConnectionDescription) => void;
-  setRemoteConnectionDescription: (
-    connectionDescription: ConnectionDescription
-  ) => void;
+  startAsParticipant: (connectionDescription: string) => void;
+  setRemoteConnectionDescription: (connectionDescription: string) => void;
   sendMessage: (message: unknown) => void;
 }
 
@@ -70,31 +64,29 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
       onChannelOpen,
     });
 
-    setLocalDescription(btoa(peerConnectionRef.current.localDescription));
+    setLocalDescription(peerConnectionRef.current.localDescription);
   }, [mode]);
 
-  const startAsSlave = useCallback(
-    async (connectionDescription: ConnectionDescription) => {
+  const startAsParticipant = useCallback(
+    async (connectionDescription: string) => {
       if (mode) return;
-      setMode(PEER_CONNECTION_MODE.SLAVE);
+      setMode(PEER_CONNECTION_MODE.PARTICIPANT);
 
       peerConnectionRef.current = await createPeerConnection({
         iceServers,
-        remoteDescription: btoa(connectionDescription.description),
+        remoteDescription: connectionDescription,
         onMessageReceived,
         onChannelOpen,
       });
 
-      setLocalDescription(btoa(peerConnectionRef.current.localDescription));
+      setLocalDescription(peerConnectionRef.current.localDescription);
     },
     [mode]
   );
 
   const setRemoteConnectionDescription = useCallback(
-    (connectionDescription: ConnectionDescription) => {
-      peerConnectionRef.current?.setAnswerDescription(
-        btoa(connectionDescription.description)
-      );
+    (connectionDescription: string) => {
+      peerConnectionRef.current?.setAnswerDescription(connectionDescription);
     },
     []
   );
@@ -105,14 +97,7 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
     peerConnectionRef.current.sendMessage(messageString);
   }, []);
 
-  const localConnectionDescription: ConnectionDescription | undefined =
-    useMemo(() => {
-      return localDescription
-        ? {
-            description: localDescription,
-          }
-        : undefined;
-    }, [localDescription]);
+  const localConnectionDescription = localDescription;
 
   return (
     <PeerConnectionContext.Provider
@@ -122,7 +107,7 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
         localConnectionDescription,
         startAsHost,
         closeConnectionAttempt,
-        startAsSlave,
+        startAsParticipant,
         setRemoteConnectionDescription,
         sendMessage,
       }}
@@ -139,7 +124,7 @@ export const usePeerConnection = <T,>() => {
     localConnectionDescription,
     startAsHost,
     closeConnectionAttempt,
-    startAsSlave,
+    startAsParticipant,
     setRemoteConnectionDescription,
     sendMessage,
   } = useContext(PeerConnectionContext);
@@ -150,7 +135,7 @@ export const usePeerConnection = <T,>() => {
     localConnectionDescription,
     startAsHost,
     closeConnectionAttempt,
-    startAsSlave,
+    startAsParticipant,
     setRemoteConnectionDescription,
     sendMessage: sendMessage as (message: T) => void,
   };

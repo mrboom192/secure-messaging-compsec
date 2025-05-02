@@ -1,16 +1,33 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ActionInput from "./ActionInput";
 import Button from "./Button";
 import { useChat } from "../hooks/useChat";
 
 function Startup() {
-  const { startAsHost, startAsSlave } = useChat();
+  const { startAsHost, startAsParticipant } = useChat();
+  const [offer, setOffer] = useState<string>("");
   const [name, setName] = useState("");
   const [hasSubmittedName, setHasSubmittedName] = useState(false);
 
   const handleSetName = (value: string) => {
     setName(value);
     setHasSubmittedName(true);
+  };
+
+  const handleParticipantSubmit = () => {
+    if (!offer) return;
+
+    try {
+      const decodedOffer = JSON.parse(atob(offer));
+      startAsParticipant(decodedOffer);
+    } catch (err) {
+      console.error("Invalid offer format:", err);
+      alert("The offer you entered is invalid.");
+    }
+  };
+
+  const handleOfferChange = (value: string) => {
+    setOffer(value);
   };
 
   return (
@@ -37,10 +54,14 @@ function Startup() {
             buttonColor="bg-emerald-400 hover:bg-emerald-500"
           />
           <p>Or</p>
-          <Button
-            buttonText="Join chat"
-            onClick={() => {}}
-            buttonColor="bg-purple-400 hover:bg-purple-500"
+          <ActionInput
+            value={offer}
+            onTextChange={handleOfferChange}
+            onAction={handleParticipantSubmit}
+            buttonText="Set Offer"
+            placeholder="Enter offer here"
+            buttonColor="bg-fuchsia-400 hover:bg-fuchsia-500"
+            disableButton={!offer}
           />
         </div>
       )}
