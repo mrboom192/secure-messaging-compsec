@@ -37,10 +37,10 @@ const ChatBox = () => {
           </span>
 
           {/* Chat bubbles */}
-          {group.map((msg, idx) => (
+          {group.map((msg) => (
             <ChatBubble
-              key={idx}
-              plaintext={msg.plaintext}
+              key={msg.id}
+              plaintext={msg.plaintext ?? "Error: Decryption failed"} // Display ciphertext if plaintext is not available
               ciphertext={msg.ciphertext}
               variant={msg.sender === currentUserName ? "sent" : "received"}
             />

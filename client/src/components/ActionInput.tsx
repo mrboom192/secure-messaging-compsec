@@ -1,5 +1,3 @@
-import React, { useEffect } from "react";
-
 interface ActionInputProps {
   value: string;
   onTextChange: (value: string) => void;

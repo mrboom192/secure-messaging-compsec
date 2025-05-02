@@ -4,10 +4,13 @@ import { Message } from "../types/Message";
 import { usePeerConnection } from "../contexts/PeerConnectionContext";
 import { useChatMessages } from "../contexts/ChatContext";
 import { nanoid } from "nanoid";
+import { encryptText } from "../utils/cryptoHelpers";
+import { useCrypto } from "../contexts/CryptoContext";
 
 export const useChat = () => {
   const { chatMessages, updateChatMessages } = useChatMessages();
   const { currentUserName } = usePeerConnection();
+  const { key } = useCrypto();
 
   const {
     mode,
@@ -20,31 +23,33 @@ export const useChat = () => {
   } = usePeerConnection();
 
   const sendTextChatMessage = useCallback(
-    (messageText: string) => {
-      // TODO: Encrypt the message before sending (create ciphertext)
+    async (messageText: string) => {
+      if (!key) {
+        console.warn("Please set a password to encrypt the message.");
+        return;
+      }
 
-      // Create a new message object
-      const message: Message = {
-        id: nanoid(),
-        sender: currentUserName,
-        plaintext: messageText,
-        ciphertext: "", // Fill in later
-        timestamp: +new Date(),
-      };
+      try {
+        const encrypted = await encryptText(messageText, key);
 
-      // Send the message over the peer connection
-      sendMessage(message);
+        const message: Message = {
+          id: nanoid(),
+          sender: currentUserName,
+          ciphertext: encrypted.ciphertext,
+          iv: encrypted.iv,
+          timestamp: Date.now(),
+        };
 
-      // Update local chat messages
-      updateChatMessages({
-        id: message.id,
-        sender: message.sender,
-        plaintext: message.plaintext,
-        ciphertext: message.ciphertext,
-        timestamp: message.timestamp,
-      });
+        // Send encrypted message over the peer connection
+        sendMessage(message);
+
+        // Add to local chat immediately
+        updateChatMessages({ ...message, plaintext: messageText });
+      } catch (err) {
+        console.error("Encryption failed:", err);
+      }
     },
-    [currentUserName, sendMessage, updateChatMessages]
+    [key, currentUserName, sendMessage, updateChatMessages]
   );
 
   return {
