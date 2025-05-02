@@ -5,7 +5,9 @@ const ChatHeader = () => {
 
   return (
     <div className="flex items-center justify-between">
-      <span className="font-bold text-2xl text-white">{currentUserName}</span>
+      <span className="text-2xl text-black">
+        You are chatting as: {currentUserName}
+      </span>
       <div className="flex-row">
         <input
           type="text"

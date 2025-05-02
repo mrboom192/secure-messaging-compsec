@@ -78,7 +78,7 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
     });
 
     setLocalDescription(peerConnectionRef.current.localDescription);
-  }, [mode]);
+  }, [mode, onChannelOpen, onMessageReceived]);
 
   const startAsParticipant = useCallback(
     async (connectionDescription: string) => {
@@ -94,7 +94,7 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
 
       setLocalDescription(peerConnectionRef.current.localDescription);
     },
-    [mode]
+    [mode, onChannelOpen, onMessageReceived]
   );
 
   const setRemoteConnectionDescription = useCallback(
