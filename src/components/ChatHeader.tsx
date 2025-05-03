@@ -10,11 +10,13 @@ const ChatHeader = () => {
   const { refreshChatMessages } = useChatMessages();
   const [previousPassword, setPreviousPassword] = useState<string>("");
 
+  // Derived state to see if the password has changed
   const canEdit = password !== previousPassword;
 
   const handleSetPassword = async () => {
     setPreviousPassword(password);
 
+    // Cant save password if its empty
     if (!password) return;
     try {
       const decryptionKey = await deriveNewKey(password);

@@ -15,18 +15,20 @@ function Startup() {
     setHasSubmittedName(true);
   };
 
+  // Start chat as a participant
   const handleParticipantSubmit = () => {
     if (!offer) return;
 
     try {
-      const decodedOffer = JSON.parse(atob(offer));
-      startAsParticipant(decodedOffer);
+      const decodedOffer = JSON.parse(atob(offer)); // Convert the aesthetically pleasing base64 string to a JSON object
+      startAsParticipant(decodedOffer); // Creates an answer SDP
     } catch (err) {
       console.error("Invalid offer format:", err);
       alert("The offer you entered is invalid.");
     }
   };
 
+  // Handle changes to the offer input
   const handleOfferChange = (value: string) => {
     setOffer(value);
   };

@@ -3,12 +3,12 @@ import { useChat } from "../hooks/useChat";
 
 const Input = () => {
   const { sendTextChatMessage } = useChat();
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); // For error handling
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return;
+    if (!message.trim()) return; // If no message, do nothing
 
     try {
       await sendTextChatMessage(message); // <== await here

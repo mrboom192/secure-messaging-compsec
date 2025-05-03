@@ -7,8 +7,9 @@ import { format } from "date-fns";
 const ChatBox = () => {
   const { username } = useUser();
   const { chatMessages } = useChatMessages();
-  const containerRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null); // for autoscroll
 
+  // Autoscroll to the bottom of the chat box when new messages are created
   useEffect(() => {
     if (containerRef.current) {
       containerRef.current.scrollTop = containerRef.current.scrollHeight;
@@ -17,6 +18,7 @@ const ChatBox = () => {
 
   const grouped = [];
 
+  // Group messages by timestamp
   for (let i = 0; i < chatMessages.length; ) {
     const groupUser = chatMessages[i].sender;
     const group: typeof chatMessages = [];
