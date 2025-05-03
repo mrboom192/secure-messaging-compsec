@@ -10,7 +10,6 @@ import {
 interface CryptoContextType {
   password: string;
   setPassword: (pw: string) => void;
-  key: CryptoKey | undefined;
   getKey: () => CryptoKey | undefined;
   deriveNewKey: (password: string) => Promise<CryptoKey | undefined>;
 }
@@ -20,7 +19,6 @@ const CryptoContext = createContext<CryptoContextType | undefined>(undefined);
 
 export function CryptoProvider({ children }: PropsWithChildren) {
   const [password, setPassword] = useState<string>("");
-  const [key, setKey] = useState<CryptoKey | undefined>(undefined);
 
   // Use a ref to hold the latest key
   const keyRef = useRef<CryptoKey | undefined>(undefined);
@@ -51,7 +49,6 @@ export function CryptoProvider({ children }: PropsWithChildren) {
       ["encrypt", "decrypt"]
     );
 
-    setKey(derivedKey);
     keyRef.current = derivedKey; // Update the ref too
     return derivedKey;
   };
@@ -60,7 +57,7 @@ export function CryptoProvider({ children }: PropsWithChildren) {
 
   return (
     <CryptoContext.Provider
-      value={{ password, setPassword, key, getKey, deriveNewKey }}
+      value={{ password, setPassword, getKey, deriveNewKey }}
     >
       {children}
     </CryptoContext.Provider>

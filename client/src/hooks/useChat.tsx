@@ -11,7 +11,7 @@ import { useUser } from "../contexts/UsernameContext";
 export const useChat = () => {
   const { chatMessages, updateAsLocal } = useChatMessages();
   const { username } = useUser();
-  const { key } = useCrypto();
+  const { getKey } = useCrypto();
 
   const {
     mode,
@@ -25,6 +25,8 @@ export const useChat = () => {
 
   const sendTextChatMessage = useCallback(
     async (messageText: string) => {
+      const key = getKey();
+
       if (!key) {
         throw new Error("Key is not available, so please set a password!");
       }
@@ -49,7 +51,7 @@ export const useChat = () => {
         console.error("Encryption failed:", err);
       }
     },
-    [key, username, sendMessage, updateAsLocal]
+    [getKey, username, sendMessage, updateAsLocal]
   );
 
   return {
