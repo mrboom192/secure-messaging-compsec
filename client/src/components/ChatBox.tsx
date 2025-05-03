@@ -1,10 +1,10 @@
 import { useChatMessages } from "../contexts/ChatContext";
-import { usePeerConnection } from "../contexts/PeerConnectionContext";
+import { useUser } from "../contexts/UsernameContext";
 import ChatBubble from "./ChatBubble";
 import { format } from "date-fns";
 
 const ChatBox = () => {
-  const { currentUserName } = usePeerConnection();
+  const { username } = useUser();
   const { chatMessages } = useChatMessages();
   const grouped = [];
 
@@ -27,12 +27,12 @@ const ChatBox = () => {
         <div
           key={groupIdx}
           className={`flex flex-col gap-2 ${
-            group[0].sender === currentUserName ? "items-end" : "items-start"
+            group[0].sender === username ? "items-end" : "items-start"
           }`}
         >
           {/* Timestamp */}
           <span className="text-xs text-black">
-            {group[0].sender === currentUserName ? "You" : group[0].sender},{" "}
+            {group[0].sender === username ? "You" : group[0].sender},{" "}
             {format(new Date(group[0].timestamp), "hh:mm a")}
           </span>
 
@@ -40,9 +40,9 @@ const ChatBox = () => {
           {group.map((msg) => (
             <ChatBubble
               key={msg.id}
-              plaintext={msg.plaintext ?? "Error: Decryption failed"} // Display ciphertext if plaintext is not available
+              plaintext={String(msg.plaintext)} // Display ciphertext if plaintext is not available
               ciphertext={msg.ciphertext}
-              variant={msg.sender === currentUserName ? "sent" : "received"}
+              variant={msg.sender === username ? "sent" : "received"}
             />
           ))}
         </div>

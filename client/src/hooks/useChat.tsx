@@ -6,10 +6,11 @@ import { useChatMessages } from "../contexts/ChatContext";
 import { nanoid } from "nanoid";
 import { encryptText } from "../utils/cryptoHelpers";
 import { useCrypto } from "../contexts/CryptoContext";
+import { useUser } from "../contexts/UsernameContext";
 
 export const useChat = () => {
-  const { chatMessages, updateChatMessages } = useChatMessages();
-  const { currentUserName } = usePeerConnection();
+  const { chatMessages, updateAsLocal } = useChatMessages();
+  const { username } = useUser();
   const { key } = useCrypto();
 
   const {
@@ -34,7 +35,7 @@ export const useChat = () => {
 
         const message: Message = {
           id: nanoid(),
-          sender: currentUserName,
+          sender: username,
           ciphertext: encrypted.ciphertext,
           iv: encrypted.iv,
           timestamp: Date.now(),
@@ -44,12 +45,12 @@ export const useChat = () => {
         sendMessage(message);
 
         // Add to local chat immediately
-        updateChatMessages({ ...message, plaintext: messageText });
+        updateAsLocal({ ...message, plaintext: messageText });
       } catch (err) {
         console.error("Encryption failed:", err);
       }
     },
-    [key, currentUserName, sendMessage, updateChatMessages]
+    [key, username, sendMessage, updateAsLocal]
   );
 
   return {

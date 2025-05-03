@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { useCrypto } from "../contexts/CryptoContext";
-import { usePeerConnection } from "../contexts/PeerConnectionContext";
 import ActionInput from "./ActionInput";
+import { useChatMessages } from "../contexts/ChatContext";
+import { useUser } from "../contexts/UsernameContext";
 
 const ChatHeader = () => {
-  const { currentUserName } = usePeerConnection();
+  const { username } = useUser();
   const { password, setPassword, deriveNewKey } = useCrypto();
+  const { refreshChatMessages } = useChatMessages();
   const [previousPassword, setPreviousPassword] = useState<string>("");
 
   const canEdit = password !== previousPassword;
@@ -15,7 +17,8 @@ const ChatHeader = () => {
 
     if (!password) return;
     try {
-      await deriveNewKey(password);
+      const decryptionKey = await deriveNewKey(password);
+      await refreshChatMessages(decryptionKey);
     } catch (error) {
       console.error("Error deriving key:", error);
     }
@@ -24,7 +27,7 @@ const ChatHeader = () => {
   return (
     <div className="flex items-center justify-between">
       <span className="text-2xl text-black">
-        You are chatting as: {currentUserName}
+        You are chatting as: {username}
       </span>
       <ActionInput
         value={password}

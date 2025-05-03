@@ -29,8 +29,6 @@ interface PeerConnectionContextValue {
   startAsParticipant: (connectionDescription: string) => void;
   setRemoteConnectionDescription: (connectionDescription: string) => void;
   sendMessage: (message: unknown) => void;
-  currentUserName: string;
-  setName: (name: string) => void;
 }
 
 const PeerConnectionContext = createContext<PeerConnectionContextValue>(
@@ -46,20 +44,15 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
   >();
   const [isConnected, setIsConnected] = useState(false);
   const peerConnectionRef = useRef<CreatePeerConnectionResponse>(null);
-  const [currentUserName, setCurrentUserName] = useState<string>("");
-  const { updateChatMessages } = useChatMessages();
-
-  const setName = (name: string) => {
-    setCurrentUserName(name); // Set the user's name
-  };
+  const { updateAsExternal } = useChatMessages();
 
   const onChannelOpen = useCallback(() => setIsConnected(true), []);
   const onMessageReceived = useCallback(
     (messageString: string) => {
       const message = JSON.parse(messageString);
-      updateChatMessages(message);
+      updateAsExternal(message);
     },
-    [updateChatMessages]
+    [updateAsExternal]
   );
 
   const closeConnectionAttempt = useCallback(() => {
@@ -125,8 +118,6 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
         startAsParticipant,
         setRemoteConnectionDescription,
         sendMessage,
-        currentUserName,
-        setName,
       }}
     >
       {children}
@@ -144,8 +135,6 @@ export const usePeerConnection = <T,>() => {
     startAsParticipant,
     setRemoteConnectionDescription,
     sendMessage,
-    currentUserName,
-    setName,
   } = useContext(PeerConnectionContext);
 
   return {
@@ -157,7 +146,5 @@ export const usePeerConnection = <T,>() => {
     startAsParticipant,
     setRemoteConnectionDescription,
     sendMessage: sendMessage as (message: T) => void,
-    currentUserName,
-    setName,
   };
 };

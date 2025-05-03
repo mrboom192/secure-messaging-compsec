@@ -5,7 +5,7 @@ interface CryptoContextType {
   password: string;
   setPassword: (pw: string) => void;
   key: CryptoKey | undefined;
-  deriveNewKey: (password: string) => Promise<void>;
+  deriveNewKey: (password: string) => Promise<CryptoKey | undefined>;
 }
 
 // Create the context
@@ -15,6 +15,7 @@ export function CryptoProvider({ children }: PropsWithChildren) {
   const [password, setPassword] = useState<string>("");
   const [key, setKey] = useState<CryptoKey | undefined>(undefined);
 
+  // Function to imperatively derive a new key from the password
   const deriveNewKey = async (password: string) => {
     if (!password) return; // Don't derive key if password is empty
 
@@ -43,6 +44,7 @@ export function CryptoProvider({ children }: PropsWithChildren) {
     );
 
     setKey(derivedKey);
+    return derivedKey;
   };
 
   return (
@@ -54,7 +56,7 @@ export function CryptoProvider({ children }: PropsWithChildren) {
   );
 }
 
-// Safer hook with error handling
+// Custom hook to consume CryptoContext
 export function useCrypto(): CryptoContextType {
   const context = useContext(CryptoContext);
   if (!context) {

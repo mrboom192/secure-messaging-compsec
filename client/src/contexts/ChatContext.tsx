@@ -1,22 +1,45 @@
 import {
   createContext,
   useContext,
-  useState,
+  useReducer,
+  useCallback,
   ReactNode,
-  useEffect,
 } from "react";
 import { Message } from "../types/Message";
 import { useCrypto } from "./CryptoContext";
-import { usePeerConnection } from "./PeerConnectionContext";
 import { decryptText } from "../utils/cryptoHelpers";
+import { useUser } from "./UsernameContext";
 
 // Extended Message with optional plaintext
 type DecryptedMessage = Message & { plaintext?: string };
 
+// Reducer state and actions
+type State = {
+  chatMessages: DecryptedMessage[];
+};
+
+type Action =
+  | { type: "ADD_MESSAGE"; payload: DecryptedMessage }
+  | { type: "SET_MESSAGES"; payload: DecryptedMessage[] };
+
+// Reducer to manage chat messages safely, even during async updates
+const chatMessagesReducer = (state: State, action: Action): State => {
+  switch (action.type) {
+    case "ADD_MESSAGE":
+      return { chatMessages: [...state.chatMessages, action.payload] };
+    case "SET_MESSAGES":
+      return { chatMessages: action.payload };
+    default:
+      return state;
+  }
+};
+
 // Define context value shape
 type ChatMessagesContextValue = {
   chatMessages: DecryptedMessage[];
-  updateChatMessages: (message: Message) => void;
+  updateAsLocal: (message: Message) => void;
+  updateAsExternal: (message: Message) => void;
+  refreshChatMessages: (decryptionKey: CryptoKey | undefined) => Promise<void>;
 };
 
 // Create context
@@ -25,66 +48,99 @@ const ChatMessagesContext = createContext<ChatMessagesContextValue | undefined>(
 );
 
 export const ChatMessagesProvider = ({ children }: { children: ReactNode }) => {
-  const [chatMessages, setChatMessages] = useState<DecryptedMessage[]>([]);
+  const [state, dispatch] = useReducer(chatMessagesReducer, {
+    chatMessages: [],
+  });
   const { key } = useCrypto();
-  const { currentUserName } = usePeerConnection();
+  const { username } = useUser();
 
-  // Constantly decrypt all messages as they update and the key changes
-  // Inefficient ik but good for user experience
-  useEffect(() => {
-    if (!key) return;
+  // Function to imperatively refresh chat messages
+  const refreshChatMessages = useCallback(
+    async (decryptionKey: CryptoKey | undefined) => {
+      if (!decryptionKey) throw new Error("Key is not available");
 
-    const reDecryptAll = async () => {
-      const updatedMessages = await Promise.all(
-        chatMessages.map(async (msg) => {
-          // Skip decryption for messages from the current user
-          if (msg.sender === currentUserName) return msg;
+      // Snapshot current state to avoid race conditions
+      const snapshot = [...state.chatMessages];
+
+      const updated = await Promise.all(
+        snapshot.map(async (msg) => {
+          // Skip messages that don't need decryption
+          if (msg.sender === username) return msg;
 
           try {
-            const plaintext = await decryptText(msg.ciphertext, msg.iv, key);
+            const plaintext = await decryptText(
+              msg.ciphertext,
+              msg.iv,
+              decryptionKey
+            );
             return { ...msg, plaintext };
-          } catch {
+          } catch (error) {
+            console.error("Decryption error:", error);
             return { ...msg, plaintext: "Error: Decryption failed" };
           }
         })
       );
 
-      setChatMessages(updatedMessages);
-    };
+      dispatch({ type: "SET_MESSAGES", payload: updated });
+    },
+    [state.chatMessages, username]
+  );
 
-    reDecryptAll();
-  }, [key]); // DO NOT LISTEN TO ESLINT WHEN IT ASKS YOU TO ADD chatMessages AS A DEPENDENCY
+  // Add one new message if it is from the current user
+  const updateAsLocal = useCallback(
+    (message: Message) => {
+      // Just in case, although this function shouldn't be used for external messages
+      if (message.sender !== username) return;
+      dispatch({ type: "ADD_MESSAGE", payload: message });
+    },
+    [username]
+  );
 
-  // Add one new message
-  const updateChatMessages = async (message: Message) => {
-    // Skip decryption for messages from the sender
-    if (message.sender === currentUserName) {
-      setChatMessages((prev) => [...prev, message]);
-      return;
-    }
+  // Add one new message if it is from an external user
+  const updateAsExternal = useCallback(
+    async (message: Message) => {
+      // Just in case, although this function shouldn't be used for local messages
+      if (message.sender === username) return;
 
-    if (!key) {
-      setChatMessages((prev) => [
-        ...prev,
-        { ...message, plaintext: "Error: No key available" },
-      ]);
-      return;
-    }
+      // If there is no key, we cannot decrypt the message
+      if (!key) {
+        dispatch({
+          type: "ADD_MESSAGE",
+          payload: { ...message, plaintext: "Error: Please set a key" },
+        });
+        return;
+      }
 
-    try {
-      const plaintext = await decryptText(message.ciphertext, message.iv, key);
-      setChatMessages((prev) => [...prev, { ...message, plaintext }]);
-    } catch (e) {
-      console.error("Decryption failed:", e);
-      setChatMessages((prev) => [
-        ...prev,
-        { ...message, plaintext: "Error: Decryption failed" },
-      ]);
-    }
-  };
+      try {
+        const plaintext = await decryptText(
+          message.ciphertext,
+          message.iv,
+          key
+        );
+        dispatch({
+          type: "ADD_MESSAGE",
+          payload: { ...message, plaintext },
+        });
+      } catch (e) {
+        console.error("Decryption failed:", e);
+        dispatch({
+          type: "ADD_MESSAGE",
+          payload: { ...message, plaintext: "Error: Decryption failed" },
+        });
+      }
+    },
+    [key, username]
+  );
 
   return (
-    <ChatMessagesContext.Provider value={{ chatMessages, updateChatMessages }}>
+    <ChatMessagesContext.Provider
+      value={{
+        chatMessages: state.chatMessages,
+        updateAsLocal,
+        updateAsExternal,
+        refreshChatMessages,
+      }}
+    >
       {children}
     </ChatMessagesContext.Provider>
   );
