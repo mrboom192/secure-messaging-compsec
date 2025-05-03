@@ -1,8 +1,9 @@
 import { useState } from "react";
+
+import { useUser } from "../contexts/UsernameContext";
+import { useChat } from "../hooks/useChat";
 import ActionInput from "./ActionInput";
 import Button from "./Button";
-import { useChat } from "../hooks/useChat";
-import { useUser } from "../contexts/UsernameContext";
 
 function Startup() {
   const { startAsHost, startAsParticipant } = useChat();
@@ -34,23 +35,23 @@ function Startup() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-background font-sans">
-      <h1 className="text-3xl text-black mb-12">
-        Welcome to Secure Messaging!
-      </h1>
+    <div className="flex flex-col gap-8 items-center justify-center h-full bg-background font-sans">
+      <h1 className="text-3xl text-black">Welcome to Secure Messaging!</h1>
 
-      <ActionInput
-        value={username}
-        onTextChange={setUsername}
-        onAction={handleSetName}
-        buttonText="Set Name"
-        placeholder="Enter your name"
-        buttonColor="bg-blue-400 hover:bg-blue-500"
-        disableButton={!username}
-      />
+      <div className="w-full">
+        <ActionInput
+          value={username}
+          onTextChange={setUsername}
+          onAction={handleSetName}
+          buttonText="Set Name"
+          placeholder="Enter your name"
+          buttonColor="bg-gray-300 hover:bg-gray-400"
+          disableButton={!username}
+        />
+      </div>
 
       {hasSubmittedName && (
-        <div className="flex flex-row items-center justify-center gap-4 mt-4">
+        <div className="flex flex-row items-center justify-center gap-4">
           <Button
             buttonText="Host chat"
             onClick={() => startAsHost()}

@@ -14,6 +14,8 @@ interface CryptoContextType {
   deriveNewKey: (password: string) => Promise<CryptoKey | undefined>;
 }
 
+// Key was automatically updated
+
 // Create the context
 const CryptoContext = createContext<CryptoContextType | undefined>(undefined);
 

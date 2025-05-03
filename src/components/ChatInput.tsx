@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import { useChat } from "../hooks/useChat";
 
 const Input = () => {
@@ -11,9 +12,11 @@ const Input = () => {
     if (!message.trim()) return; // If no message, do nothing
 
     try {
-      await sendTextChatMessage(message); // <== await here
-      setMessage(""); // Clear input only if message was sent successfully
-      setError(null); // Clear error if message was sent successfully
+      await sendTextChatMessage(message);
+
+      // Resets
+      setMessage("");
+      setError(null);
     } catch (error: unknown) {
       console.error("sendTextChatMessage failed:", error);
       if (error instanceof Error) {
@@ -27,16 +30,16 @@ const Input = () => {
   return (
     <div>
       {error && (
-        <div className="text-rose-500 text-sm mb-2">Error: {error}</div>
+        <p className="font-bold text-pink-500 text-sm mb-2">Error: {error}</p>
       )}
       <form
         onSubmit={handleSubmit}
-        className="text-sm w-full p-3 flex flex-col gap-2 border-r-2 border-b-2 border-black bg-white"
+        className="text-sm w-full flex flex-col gap-2 border-r-2 border-b-2 border-black bg-white"
       >
         <input
           type="text"
           placeholder="Enter your message"
-          className="bg-white focus:outline-none w-72"
+          className="p-3 focus:outline-none w-full "
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />

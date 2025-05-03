@@ -8,7 +8,7 @@ export default function App() {
 
   return (
     <div className="flex w-full h-screen items-center justify-center bg-background font-sans">
-      <div className="w-4/5 h-4/5 flex flex-row gap-6">
+      <div className="w-4/5 h-4/5 flex flex-row gap-6 items-center justify-center">
         {(!mode || !isConnected) && <Startup />}
         <ConnectionDialog />
         {mode && isConnected && <ChatInstance />}

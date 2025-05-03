@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: Consolas, ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: "Courier New", Courier, monospace;
   --color-background: #d9deff;
   --color-light-grey: #d3d3d3;
   --color-text-grey: #6f6f6f;

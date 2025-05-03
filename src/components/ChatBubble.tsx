@@ -1,7 +1,7 @@
 const ChatBubble = ({
-  plaintext = "Hello, this is a test message.",
-  ciphertext = "Encrypted message here",
-  variant = "sent",
+  plaintext,
+  ciphertext,
+  variant,
 }: {
   plaintext: string;
   ciphertext: string;
@@ -12,9 +12,10 @@ const ChatBubble = ({
       <p className="whitespace-pre-wrap break-words">{plaintext}</p>
       <div className="w-full h-px bg-gray-200" />
       <p className="text-xs text-gray-500 max-h-24 overflow-auto whitespace-pre-wrap break-all">
-        {variant === "sent"
-          ? `Sent ciphertext: ${ciphertext}`
-          : `Received ciphertext: ${ciphertext}`}
+        <span className="font-bold">
+          {variant === "sent" ? `Sent ciphertext:` : `Received ciphertext:`}
+        </span>{" "}
+        {ciphertext}
       </p>
     </div>
   );
