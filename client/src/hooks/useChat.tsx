@@ -26,8 +26,7 @@ export const useChat = () => {
   const sendTextChatMessage = useCallback(
     async (messageText: string) => {
       if (!key) {
-        console.warn("Please set a password to encrypt the message.");
-        return;
+        throw new Error("Key is not available, so please set a password!");
       }
 
       try {

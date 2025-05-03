@@ -32,7 +32,7 @@ function Startup() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-screen bg-background font-sans">
+    <div className="flex flex-col items-center justify-center w-full h-full bg-background font-sans">
       <h1 className="text-3xl text-black mb-12">
         Welcome to Secure Messaging!
       </h1>
