@@ -1,10 +1,17 @@
-import { createContext, useState, useContext, PropsWithChildren } from "react";
+import {
+  createContext,
+  useState,
+  useContext,
+  PropsWithChildren,
+  useRef,
+} from "react";
 
 // Define the context type
 interface CryptoContextType {
   password: string;
   setPassword: (pw: string) => void;
   key: CryptoKey | undefined;
+  getKey: () => CryptoKey | undefined;
   deriveNewKey: (password: string) => Promise<CryptoKey | undefined>;
 }
 
@@ -15,11 +22,13 @@ export function CryptoProvider({ children }: PropsWithChildren) {
   const [password, setPassword] = useState<string>("");
   const [key, setKey] = useState<CryptoKey | undefined>(undefined);
 
-  // Function to imperatively derive a new key from the password
-  const deriveNewKey = async (password: string) => {
-    if (!password) return; // Don't derive key if password is empty
+  // Use a ref to hold the latest key
+  const keyRef = useRef<CryptoKey | undefined>(undefined);
 
-    const encoder = new TextEncoder(); // Need to encode the password for it to be used with crypto
+  const deriveNewKey = async (password: string) => {
+    if (!password) return;
+
+    const encoder = new TextEncoder();
 
     const keyMaterial = await crypto.subtle.importKey(
       "raw",
@@ -29,7 +38,6 @@ export function CryptoProvider({ children }: PropsWithChildren) {
       ["deriveKey"]
     );
 
-    // Derive the key using PBKDF2
     const derivedKey = await crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
@@ -44,12 +52,15 @@ export function CryptoProvider({ children }: PropsWithChildren) {
     );
 
     setKey(derivedKey);
+    keyRef.current = derivedKey; // Update the ref too
     return derivedKey;
   };
 
+  const getKey = () => keyRef.current;
+
   return (
     <CryptoContext.Provider
-      value={{ password, setPassword, key, deriveNewKey }}
+      value={{ password, setPassword, key, getKey, deriveNewKey }}
     >
       {children}
     </CryptoContext.Provider>

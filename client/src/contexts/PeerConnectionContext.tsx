@@ -8,6 +8,7 @@ import React, {
   useContext,
 } from "react";
 import { useChatMessages } from "./ChatContext";
+import { useCrypto } from "./CryptoContext";
 
 export enum PEER_CONNECTION_MODE {
   HOST = "HOST",
@@ -45,14 +46,16 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
   const [isConnected, setIsConnected] = useState(false);
   const peerConnectionRef = useRef<CreatePeerConnectionResponse>(null);
   const { updateAsExternal } = useChatMessages();
+  const { getKey } = useCrypto();
 
   const onChannelOpen = useCallback(() => setIsConnected(true), []);
   const onMessageReceived = useCallback(
     (messageString: string) => {
       const message = JSON.parse(messageString);
-      updateAsExternal(message);
+      const key = getKey();
+      updateAsExternal(message, key);
     },
-    [updateAsExternal]
+    [getKey, updateAsExternal]
   );
 
   const closeConnectionAttempt = useCallback(() => {

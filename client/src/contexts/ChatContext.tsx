@@ -6,7 +6,6 @@ import {
   ReactNode,
 } from "react";
 import { Message } from "../types/Message";
-import { useCrypto } from "./CryptoContext";
 import { decryptText } from "../utils/cryptoHelpers";
 import { useUser } from "./UsernameContext";
 
@@ -38,8 +37,8 @@ const chatMessagesReducer = (state: State, action: Action): State => {
 type ChatMessagesContextValue = {
   chatMessages: DecryptedMessage[];
   updateAsLocal: (message: Message) => void;
-  updateAsExternal: (message: Message) => void;
-  refreshChatMessages: (decryptionKey: CryptoKey | undefined) => Promise<void>;
+  updateAsExternal: (message: Message, key: CryptoKey | undefined) => void;
+  refreshChatMessages: (key: CryptoKey | undefined) => Promise<void>;
 };
 
 // Create context
@@ -51,13 +50,12 @@ export const ChatMessagesProvider = ({ children }: { children: ReactNode }) => {
   const [state, dispatch] = useReducer(chatMessagesReducer, {
     chatMessages: [],
   });
-  const { key } = useCrypto();
   const { username } = useUser();
 
   // Function to imperatively refresh chat messages
   const refreshChatMessages = useCallback(
-    async (decryptionKey: CryptoKey | undefined) => {
-      if (!decryptionKey) throw new Error("Key is not available");
+    async (key: CryptoKey | undefined) => {
+      if (!key) throw new Error("Key is not available");
 
       // Snapshot current state to avoid race conditions
       const snapshot = [...state.chatMessages];
@@ -68,11 +66,7 @@ export const ChatMessagesProvider = ({ children }: { children: ReactNode }) => {
           if (msg.sender === username) return msg;
 
           try {
-            const plaintext = await decryptText(
-              msg.ciphertext,
-              msg.iv,
-              decryptionKey
-            );
+            const plaintext = await decryptText(msg.ciphertext, msg.iv, key);
             return { ...msg, plaintext };
           } catch (error) {
             console.error("Decryption error:", error);
@@ -98,7 +92,7 @@ export const ChatMessagesProvider = ({ children }: { children: ReactNode }) => {
 
   // Add one new message if it is from an external user
   const updateAsExternal = useCallback(
-    async (message: Message) => {
+    async (message: Message, key: CryptoKey | undefined) => {
       // Just in case, although this function shouldn't be used for local messages
       if (message.sender === username) return;
 
@@ -129,7 +123,7 @@ export const ChatMessagesProvider = ({ children }: { children: ReactNode }) => {
         });
       }
     },
-    [key, username]
+    [username]
   );
 
   return (
