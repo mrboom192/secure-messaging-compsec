@@ -28,8 +28,8 @@ const ChatHeader = () => {
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-2xl text-black">
+    <div className="flex flex-row gap-4 items-center justify-between">
+      <span className="text-lg text-black">
         You are chatting as: {username}
       </span>
       <ActionInput
