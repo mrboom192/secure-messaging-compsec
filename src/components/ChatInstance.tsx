@@ -4,7 +4,7 @@ import ChatBox from "./ChatBox";
 
 const ChatInstance = () => {
   return (
-    <div className="flex flex-col gap-4 w-full h-full mt-4">
+    <div className="flex flex-col gap-4 w-full h-full mt-8">
       <ChatHeader />
       <ChatBox />
       <ChatInput />
