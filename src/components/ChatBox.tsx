@@ -9,9 +9,9 @@ import { useCrypto } from "../contexts/CryptoContext";
 const ChatBox = () => {
   const { chatMessages } = useChatMessages();
   const { username } = useUser();
-  const { getKey } = useCrypto();
+  const { getPassword } = useCrypto();
 
-  const key = getKey();
+  const password = getPassword();
   const containerRef = useRef<HTMLDivElement>(null); // for autoscroll
 
   // Autoscroll to the bottom of the chat box when new messages are created
@@ -41,12 +41,12 @@ const ChatBox = () => {
       ref={containerRef}
       className="flex flex-col p-4 gap-6 bg-white border-r-2 border-b-2 h-full overflow-y-auto relative"
     >
-      {!key && (
+      {!password && (
         <p className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 animate-pulse text-xl">
           Set a password to continue
         </p>
       )}
-      {key &&
+      {password &&
         grouped.map((group, groupIdx) => (
           <div
             key={groupIdx}
