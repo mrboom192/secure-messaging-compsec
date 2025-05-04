@@ -46,16 +46,23 @@ export const PeerConnectionProvider: FC<{ children: React.ReactNode }> = ({
   const [isConnected, setIsConnected] = useState(false);
   const peerConnectionRef = useRef<CreatePeerConnectionResponse>(null);
   const { updateAsExternal } = useChatMessages();
-  const { getKey } = useCrypto();
+  const { getPassword, deriveKey } = useCrypto();
 
   const onChannelOpen = useCallback(() => setIsConnected(true), []);
+
+  // Handle incoming messages
   const onMessageReceived = useCallback(
-    (messageString: string) => {
+    async (messageString: string) => {
       const message = JSON.parse(messageString);
-      const key = getKey();
-      updateAsExternal(message, key);
+      const password = getPassword();
+
+      const key = await deriveKey(
+        password,
+        Uint8Array.from(atob(message.salt), (c) => c.charCodeAt(0))
+      );
+      await updateAsExternal(message, key);
     },
-    [getKey, updateAsExternal]
+    [getPassword, updateAsExternal, deriveKey]
   );
 
   const closeConnectionAttempt = useCallback(() => {

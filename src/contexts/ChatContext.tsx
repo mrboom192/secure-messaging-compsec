@@ -8,6 +8,7 @@ import {
 import { Message } from "../types/Message";
 import { decryptText } from "../utils/cryptoHelpers";
 import { useUser } from "./UsernameContext";
+import { useCrypto } from "./CryptoContext";
 
 // Extended Message with optional plaintext
 type DecryptedMessage = Message & { plaintext?: string };
@@ -38,7 +39,7 @@ type ChatMessagesContextValue = {
   chatMessages: DecryptedMessage[];
   updateAsLocal: (message: Message) => void;
   updateAsExternal: (message: Message, key: CryptoKey | undefined) => void;
-  refreshChatMessages: (key: CryptoKey | undefined) => Promise<void>;
+  refreshChatMessages: () => Promise<void>;
 };
 
 // Create context
@@ -51,36 +52,45 @@ export const ChatMessagesProvider = ({ children }: { children: ReactNode }) => {
     chatMessages: [],
   });
   const { username } = useUser();
+  const { getPassword, deriveKey } = useCrypto();
 
   // Function to imperatively refresh chat messages
-  const refreshChatMessages = useCallback(
-    async (key: CryptoKey | undefined) => {
-      if (!key) throw new Error("Key is not available");
+  const refreshChatMessages = useCallback(async () => {
+    const password = getPassword();
+    if (!password) throw new Error("No password set");
 
-      // Snapshot current state to avoid race conditions
-      const snapshot = [...state.chatMessages];
+    // Take snapshot of current messages
+    const snapshot = [...state.chatMessages];
 
-      const updated = await Promise.all(
-        snapshot.map(async (msg) => {
-          // Skip messages that don't need decryption
-          if (msg.sender === username) return msg;
+    const updated = await Promise.all(
+      snapshot.map(async (msg) => {
+        // Skip messages that don't need decryption
+        if (msg.sender === username) return msg;
 
-          try {
-            const plaintext = await decryptText(msg.ciphertext, msg.iv, key);
-            return { ...msg, plaintext };
-          } catch (error) {
-            console.error("Decryption error:", error);
-            return { ...msg, plaintext: "Error: Decryption failed" };
-          }
-        })
-      );
+        // Generate key from password
+        const key = await deriveKey(
+          password,
+          Uint8Array.from(atob(msg.salt), (c) => c.charCodeAt(0))
+        );
 
-      dispatch({ type: "SET_MESSAGES", payload: updated });
-    },
-    [state.chatMessages, username]
-  );
+        if (!key) {
+          console.error("Key derivation failed");
+          return { ...msg, plaintext: "Error: Key derivation failed" };
+        }
 
-  // Add one new message if it is from the current user
+        try {
+          const plaintext = await decryptText(msg.ciphertext, msg.iv, key);
+          return { ...msg, plaintext };
+        } catch (error) {
+          console.error("Decryption error:", error);
+          return { ...msg, plaintext: "Error: Decryption failed" };
+        }
+      })
+    );
+
+    dispatch({ type: "SET_MESSAGES", payload: updated });
+  }, [deriveKey, getPassword, state.chatMessages, username]);
+
   const updateAsLocal = useCallback(
     (message: Message) => {
       // Just in case, although this function shouldn't be used for external messages

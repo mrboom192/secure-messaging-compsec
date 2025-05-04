@@ -1,30 +1,32 @@
-import {
-  createContext,
-  useState,
-  useContext,
-  PropsWithChildren,
-  useRef,
-} from "react";
+import { createContext, useContext, PropsWithChildren, useRef } from "react";
 
 // Define the context type
 interface CryptoContextType {
-  password: string;
-  setPassword: (pw: string) => void;
-  getKey: () => CryptoKey | undefined;
-  deriveNewKey: (password: string) => Promise<CryptoKey | undefined>;
+  deriveKey: (
+    password: string | null,
+    salt: Uint8Array
+  ) => Promise<CryptoKey | undefined>;
+  getPassword: () => string | null;
+  setPassword: (password: string) => void;
 }
 
 // Create the context
 const CryptoContext = createContext<CryptoContextType | undefined>(undefined);
 
 export function CryptoProvider({ children }: PropsWithChildren) {
-  const [password, setPassword] = useState<string>("");
-
-  // Use a ref to hold the latest key
+  // Store the salt and key
+  // const saltRef = useRef<Uint8Array | null>(null);
+  const passwordRef = useRef<string | null>(null);
   const keyRef = useRef<CryptoKey | undefined>(undefined);
 
-  const deriveNewKey = async (password: string) => {
-    if (!password) return;
+  const setPassword = (password: string) => {
+    passwordRef.current = password;
+  };
+
+  const getPassword = () => passwordRef.current;
+
+  const deriveKey = async (password: string | null, salt: Uint8Array) => {
+    if (!password) return undefined;
 
     const encoder = new TextEncoder();
 
@@ -39,7 +41,7 @@ export function CryptoProvider({ children }: PropsWithChildren) {
     const derivedKey = await crypto.subtle.deriveKey(
       {
         name: "PBKDF2",
-        salt: encoder.encode("static-or-dynamic-salt"),
+        salt,
         iterations: 100000,
         hash: "SHA-256",
       },
@@ -53,12 +55,8 @@ export function CryptoProvider({ children }: PropsWithChildren) {
     return derivedKey;
   };
 
-  const getKey = () => keyRef.current;
-
   return (
-    <CryptoContext.Provider
-      value={{ password, setPassword, getKey, deriveNewKey }}
-    >
+    <CryptoContext.Provider value={{ getPassword, setPassword, deriveKey }}>
       {children}
     </CryptoContext.Provider>
   );

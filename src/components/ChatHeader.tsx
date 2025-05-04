@@ -6,21 +6,22 @@ import { useUser } from "../contexts/UsernameContext";
 
 const ChatHeader = () => {
   const { username } = useUser();
-  const { password, setPassword, deriveNewKey } = useCrypto();
+  const { setPassword } = useCrypto();
   const { refreshChatMessages } = useChatMessages();
+  const [tempPassword, setTempPassword] = useState<string>("");
   const [previousPassword, setPreviousPassword] = useState<string>("");
 
   // Derived state to see if the password has changed
-  const canEdit = password !== previousPassword;
+  const canEdit = tempPassword !== previousPassword;
 
   const handleSetPassword = async () => {
-    setPreviousPassword(password);
+    setPreviousPassword(tempPassword);
 
     // Cant save password if its empty
-    if (!password) return;
+    if (!tempPassword) return;
     try {
-      const decryptionKey = await deriveNewKey(password);
-      await refreshChatMessages(decryptionKey);
+      setPassword(tempPassword);
+      await refreshChatMessages();
     } catch (error) {
       console.error("Error deriving key:", error);
     }
@@ -32,8 +33,8 @@ const ChatHeader = () => {
         You are chatting as: {username}
       </span>
       <ActionInput
-        value={password}
-        onTextChange={(value) => setPassword(value)}
+        value={tempPassword}
+        onTextChange={(value) => setTempPassword(value)}
         onAction={handleSetPassword}
         buttonText="Set password"
         placeholder="Enter shared password"

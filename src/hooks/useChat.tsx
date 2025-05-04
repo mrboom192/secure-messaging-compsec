@@ -11,7 +11,7 @@ import { useUser } from "../contexts/UsernameContext";
 export const useChat = () => {
   const { chatMessages, updateAsLocal } = useChatMessages();
   const { username } = useUser();
-  const { getKey } = useCrypto();
+  const { getPassword, deriveKey } = useCrypto();
 
   const {
     mode,
@@ -25,7 +25,10 @@ export const useChat = () => {
 
   const sendTextChatMessage = useCallback(
     async (messageText: string) => {
-      const key = getKey();
+      const password = getPassword();
+      const salt = crypto.getRandomValues(new Uint8Array(16)); // Generate a random salt
+      const saltString = btoa(String.fromCharCode(...salt)); // Convert to base64 string
+      const key = await deriveKey(password, salt);
 
       if (!key) {
         throw new Error("Key is not available, so please set a password!");
@@ -39,6 +42,7 @@ export const useChat = () => {
           sender: username,
           ciphertext: encrypted.ciphertext,
           iv: encrypted.iv,
+          salt: saltString,
           timestamp: Date.now(),
         };
 
@@ -51,7 +55,7 @@ export const useChat = () => {
         console.error("Encryption failed:", err);
       }
     },
-    [getKey, username, sendMessage, updateAsLocal]
+    [deriveKey, getPassword, username, sendMessage, updateAsLocal]
   );
 
   return {

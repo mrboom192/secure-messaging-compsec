@@ -37,7 +37,7 @@ export async function decryptText(
   return decoder.decode(decrypted);
 }
 
-function bufferToBase64(buffer: ArrayBuffer): string {
+export function bufferToBase64(buffer: ArrayBuffer): string {
   return btoa(String.fromCharCode(...new Uint8Array(buffer)));
 }
 
