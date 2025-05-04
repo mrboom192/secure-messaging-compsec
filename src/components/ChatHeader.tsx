@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useCrypto } from "../contexts/CryptoContext";
-import ActionInput from "./ActionInput";
+
 import { useChatMessages } from "../contexts/ChatContext";
+import { useCrypto } from "../contexts/CryptoContext";
 import { useUser } from "../contexts/UsernameContext";
+import ActionInput from "./ActionInput";
 
 const ChatHeader = () => {
   const { username } = useUser();
@@ -28,8 +29,8 @@ const ChatHeader = () => {
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <span className="text-2xl text-black">
+    <div className="flex flex-row gap-4 items-center justify-between">
+      <span className="text-lg text-black">
         You are chatting as: {username}
       </span>
       <ActionInput
@@ -38,7 +39,7 @@ const ChatHeader = () => {
         onAction={handleSetPassword}
         buttonText="Set password"
         placeholder="Enter shared password"
-        buttonColor="bg-fuchsia-400 hover:bg-fuchsia-500"
+        buttonColor="bg-emerald-400 hover:bg-emerald-500"
         disableButton={!canEdit}
       />
     </div>

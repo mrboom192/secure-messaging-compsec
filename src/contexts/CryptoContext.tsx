@@ -10,6 +10,8 @@ interface CryptoContextType {
   setPassword: (password: string) => void;
 }
 
+// Key was automatically updated
+
 // Create the context
 const CryptoContext = createContext<CryptoContextType | undefined>(undefined);
 

@@ -1,5 +1,4 @@
-import { createPeerConnection, CreatePeerConnectionResponse } from "p2p-chat";
-import React, {
+import {
   createContext,
   FC,
   useState,
@@ -7,6 +6,8 @@ import React, {
   useCallback,
   useContext,
 } from "react";
+
+import { createPeerConnection, CreatePeerConnectionResponse } from "p2p-chat";
 import { useChatMessages } from "./ChatContext";
 import { useCrypto } from "./CryptoContext";
 
