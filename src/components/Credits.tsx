@@ -1,6 +1,6 @@
 const Credits = () => {
   return (
-    <div className="flex flex-col items-center gap-4 text-sm text-black">
+    <div className="flex flex-col items-center gap-4 text-sm text-black mb-4">
       <a
         href="https://github.com/mrboom192/secure-messaging-compsec"
         target="_blank"

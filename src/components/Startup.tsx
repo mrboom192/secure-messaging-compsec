@@ -35,7 +35,7 @@ function Startup() {
   };
 
   return (
-    <div className="flex flex-col gap-8 items-center justify-center h-full bg-background font-sans">
+    <div className="flex flex-col gap-8 items-center justify-center h-full bg-background font-sans mt-4">
       {/* <img src="/logo.png" alt="Logo" className="w-16 h-auto" /> */}
       <h1 className="text-3xl text-black text-center">
         Welcome to Secure Messaging!
