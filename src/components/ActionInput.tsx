@@ -23,7 +23,7 @@ const ActionInput: React.FC<ActionInputProps> = ({
   };
 
   return (
-    <div className="flex flex-row items-center">
+    <div className="flex flex-row items-center w-full">
       <input
         type="text"
         value={value}

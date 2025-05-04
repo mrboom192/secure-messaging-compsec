@@ -13,6 +13,7 @@
     "@headlessui/react": "^2.2.2",
     "@tailwindcss/vite": "^4.1.4",
     "date-fns": "^4.1.0",
+    "lucide-react": "^0.507.0",
     "nanoid": "^5.1.5",
     "p2p-chat": "^3.0.0",
     "react": "^19.0.0",

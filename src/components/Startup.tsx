@@ -36,7 +36,10 @@ function Startup() {
 
   return (
     <div className="flex flex-col gap-8 items-center justify-center h-full bg-background font-sans">
-      <h1 className="text-3xl text-black">Welcome to Secure Messaging!</h1>
+      {/* <img src="/logo.png" alt="Logo" className="w-16 h-auto" /> */}
+      <h1 className="text-3xl text-black text-center">
+        Welcome to Secure Messaging!
+      </h1>
 
       <div className="w-full">
         <ActionInput
@@ -51,7 +54,7 @@ function Startup() {
       </div>
 
       {hasSubmittedName && (
-        <div className="flex flex-row items-center justify-center gap-4">
+        <div className="flex flex-col md:flex-row items-center justify-center gap-4">
           <Button
             buttonText="Host chat"
             onClick={() => startAsHost()}

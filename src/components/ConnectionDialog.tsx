@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Dialog, DialogPanel } from "@headlessui/react";
 import { useChat } from "../hooks/useChat";
 import ActionInput from "./ActionInput";
+import CopyButton from "./CopyButton";
 import Button from "./Button";
 
 import {
@@ -20,8 +21,8 @@ const ConnectionDialog = () => {
       onClose={closeConnectionAttempt}
       className="relative z-50"
     >
-      <div className="fixed inset-0 flex w-screen bg-black/50 items-center justify-center p-4">
-        <DialogPanel className="max-w-lg space-y-4 bg-background p-12 flex flex-col gap-8 border-b-2 border-r-2">
+      <div className="fixed inset-0 flex w-screen bg-black/50 items-center justify-center">
+        <DialogPanel className="w-screen h-screen md:h-auto md:w-auto bg-background p-12 flex flex-col gap-8 items-center justify-center border-b-2 border-r-2">
           <PendingText />
           {mode == PEER_CONNECTION_MODE.HOST && <DialogContentHost />}
           {mode == PEER_CONNECTION_MODE.PARTICIPANT && (
@@ -80,9 +81,13 @@ const DialogContentHost = () => {
 
   return (
     <div className="flex flex-col items-start gap-4 w-full">
-      <p className="text-sm">1) Send offer to peer:</p>
+      <div className="flex flex-row justify-between items-center w-full">
+        <p className="text-sm">1) Send offer to peer:</p>
+        <CopyButton text={encodedConnectionDescription} />
+      </div>
+
       <textarea
-        className="w-full max-w-md h-48 p-2 border-black border-r-2 border-b-2 resize-none text-xs bg-white"
+        className="w-full md:min-w-sm h-48 p-2 border-black border-r-2 border-b-2 resize-none text-xs bg-white"
         readOnly
         value={encodedConnectionDescription || ""}
       />
@@ -107,10 +112,14 @@ const DialogContentParticipant = () => {
 
   return (
     <div className="flex flex-col items-start gap-4 w-full">
-      <p className="text-sm">Send this answer to the host:</p>
+      <div className="flex flex-row justify-between items-center w-full">
+        <p className="text-sm">1) Send answer to peer:</p>
+        <CopyButton text={encodedAnswer} />
+      </div>
+
       <textarea
         readOnly
-        className="w-full max-w-md h-48 p-2 border-black border-r-2 border-b-2 resize-none text-xs bg-white"
+        className="w-full md:min-w-sm h-48 p-2 border-black border-r-2 border-b-2 resize-none text-xs bg-white"
         value={encodedAnswer || ""}
       />
     </div>

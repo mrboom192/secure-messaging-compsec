@@ -1,31 +1,29 @@
 import { useState } from "react";
-
 import { useChat } from "../hooks/useChat";
+import { Send } from "lucide-react";
 
 const Input = () => {
   const { sendTextChatMessage } = useChat();
-  const [error, setError] = useState<string | null>(null); // For error handling
+  const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!message.trim()) return; // If no message, do nothing
+    if (!message.trim()) return;
 
     try {
       await sendTextChatMessage(message);
-
-      // Resets
       setMessage("");
       setError(null);
     } catch (error: unknown) {
       console.error("sendTextChatMessage failed:", error);
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError("Failed to send message");
-      }
+      setError(
+        error instanceof Error ? error.message : "Failed to send message"
+      );
     }
   };
+
+  const canSubmit = message.trim().length > 0;
 
   return (
     <div>
@@ -34,15 +32,27 @@ const Input = () => {
       )}
       <form
         onSubmit={handleSubmit}
-        className="text-sm w-full flex flex-col gap-2 border-r-2 border-b-2 border-black bg-white"
+        className="w-full flex flex-row border-r-2 border-b-2 border-black bg-white"
       >
         <input
           type="text"
           placeholder="Enter your message"
-          className="p-3 focus:outline-none w-full "
+          className="p-3 focus:outline-none w-full"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
         />
+        <button
+          type="submit"
+          disabled={!canSubmit}
+          className={`p-3 text-white flex items-center justify-center transition-colors ${
+            canSubmit
+              ? "bg-black hover:bg-gray-800"
+              : "bg-gray-400 cursor-not-allowed"
+          }`}
+          title="Send message"
+        >
+          <Send className="w-4 h-4" />
+        </button>
       </form>
     </div>
   );

@@ -29,15 +29,15 @@ const ChatHeader = () => {
   };
 
   return (
-    <div className="flex flex-row gap-4 items-center justify-between">
-      <span className="text-lg text-black">
+    <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
+      <span className="text-lg text-black md:min-w-fit">
         You are chatting as: {username}
       </span>
       <ActionInput
         value={tempPassword}
         onTextChange={(value) => setTempPassword(value)}
         onAction={handleSetPassword}
-        buttonText="Set password"
+        buttonText="Confirm"
         placeholder="Enter shared password"
         buttonColor="bg-emerald-400 hover:bg-emerald-500"
         disableButton={!canEdit}
