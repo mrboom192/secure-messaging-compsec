@@ -55,7 +55,15 @@ const ChatBox = () => {
             }`}
           >
             <span className="text-xs text-black">
-              {group[0].sender === username ? "You" : group[0].sender},{" "}
+              <span
+                className={`font-bold ${
+                  group[0].sender === username
+                    ? "text-emerald-400"
+                    : "text-fuchsia-400"
+                }`}
+              >
+                {group[0].sender === username ? "You" : group[0].sender}
+              </span>{" "}
               {format(new Date(group[0].timestamp), "hh:mm a")}
             </span>
 
