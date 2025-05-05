@@ -29,7 +29,7 @@ const ChatHeader = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row gap-8 items-center justify-between">
+    <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-center justify-between mt-8">
       <span className="text-lg text-black md:min-w-fit">
         You are chatting as: {username}
       </span>
