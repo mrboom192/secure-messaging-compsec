@@ -1,6 +1,6 @@
 Authors: Victoria Rowe, Cristiana Eagen, Jason Nguyen
 
-Overview: This is a secure, peer-to-peer (P2P) instant messaging app built using WebRTC and AES-256-GCM encryption. Users can chat in real time using a shared password for end-to-end encrypted communication. You can try out the demo here: [Secure Message](https://secure-messaging.netlify.app/)
+Overview: This is a secure, peer-to-peer (P2P) instant messaging app built using WebRTC and AES-256-GCM encryption. Users can chat in real time using a shared password for end-to-end encrypted communication. You can try out the demo here: [secure-messaging](https://secure-messaging.netlify.app/)
 
 Features:
 Peer-to-peer messaging using WebRTC (no central server)
