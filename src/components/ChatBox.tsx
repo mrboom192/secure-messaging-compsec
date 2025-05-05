@@ -70,7 +70,7 @@ const ChatBox = () => {
             {group.map((msg) => (
               <ChatBubble
                 key={msg.id}
-                plaintext={msg.sender === username ? "" : String(msg.plaintext)} // sender only sees ciphertext
+                plaintext={String(msg.plaintext)}
                 ciphertext={msg.ciphertext}
                 variant={msg.sender === username ? "sent" : "received"}
               />
